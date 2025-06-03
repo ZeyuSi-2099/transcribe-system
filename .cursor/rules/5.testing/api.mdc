@@ -1,0 +1,64 @@
+---
+description: 当执行测试任务时
+globs: 
+alwaysApply: false
+---
+# API 测试规范 (API Testing)
+
+## 1. 测试框架与工具
+- **测试框架**: `pytest` (配合 FastAPI 的 `TestClient`)
+- **辅助库**: 
+    - `httpx` (FastAPI `TestClient` 基于此库)
+    - 考虑使用 `pytest-cov` 生成覆盖率报告。
+
+## 2. 测试类型与范围
+- **单元测试 (Unit Tests)**: 
+    - 测试独立的业务逻辑函数、工具函数等。
+    - 对于 FastAPI，可以测试 Pydantic 模型、依赖项的逻辑等。
+- **集成测试 (Integration Tests)**: 
+    - **API 端点测试**: 这是 API 测试的重点。使用 `TestClient` 测试每个 API 端点的不同场景。
+    - 测试请求处理、数据校验、服务调用、响应生成等整个流程。
+    - 模拟外部依赖 (如 LLM 服务)，确保测试的独立性和速度。
+
+## 3. 测试用例设计
+- **覆盖主要路径**: 
+    - 针对每个 API 端点，测试正常的请求和预期的成功响应 (HTTP 2xx)。
+- **覆盖边界条件与错误路径**: 
+    - 测试无效输入、错误数据格式 (HTTP 4xx, 特别是 400, 422)。
+    - 测试未授权访问 (HTTP 401, 403)。
+    - 测试资源未找到 (HTTP 404)。
+    - 测试服务器内部错误 (模拟并捕获 HTTP 5xx)。
+- **参数化测试**: 对于具有多种输入组合的端点，使用 `pytest.mark.parametrize` 来简化测试用例。
+- **幂等性测试**: 对于 POST, PUT, DELETE 等可能产生副作用的请求，考虑测试其幂等性 (如果适用)。
+
+## 4. 测试数据与环境
+- **测试数据**: 
+    - 使用固定的、可复现的测试数据。
+    - 对于复杂的输入数据，可以考虑使用 fixtures 或单独的数据文件。
+- **环境变量**: 确保测试环境与开发/生产环境的配置隔离。测试时不应依赖外部服务的真实实例 (除非是专门的端到端集成测试环境)。
+- **模拟 (Mocking/Patching)**: 
+    - 使用 `unittest.mock.patch` 或 pytest 的 `mocker` fixture 来模拟外部服务 (如 LLM 调用)、数据库操作等，以隔离测试单元并加快测试速度。
+    - 确保模拟行为与真实服务的关键特征一致。
+
+## 5. 测试组织
+- **文件结构**: 测试文件应与被测试的模块相对应，例如 `app/api/v1/endpoints/transcript_processing.py` 的测试可以放在 `tests/backend/api/v1/endpoints/test_transcript_processing.py`。
+- **命名约定**: 测试文件以 `test_` 开头，测试函数也以 `test_` 开头。
+- **可读性**: 测试用例应清晰易懂，描述其测试的目的和场景。
+
+## 6. 运行与集成
+- **CI/CD 集成**: 将 API 测试集成到 CI/CD 流水线中，确保每次代码提交都运行测试。
+- **定期执行**: 定期完整运行所有 API 测试。
+
+## 7. FastAPI TestClient 使用要点
+- **实例化 TestClient**: `from fastapi.testclient import TestClient`
+- **发送请求**: `client.get("/items/")`, `client.post("/items/", json={"name": "Test Item"})`
+- **断言响应**: 检查状态码 (`response.status_code`)、响应体内容 (`response.json()`)、头部信息 (`response.headers`) 等。
+
+## 8. 任务 1.4 参考 (来自 README.md)
+- 使用工具（如 FastAPI 自动生成的交互式文档、Postman 或 curl）对 API 端点进行初步测试。 (手动测试)
+- (自动化测试应基于此手动验证之上进行设计和实现)
+
+## 9. 遵循 `5.testing/general.mdc` 中的通用测试规范。
+
+
+

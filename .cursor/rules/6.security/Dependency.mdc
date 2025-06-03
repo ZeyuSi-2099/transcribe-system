@@ -1,0 +1,58 @@
+---
+description: 当安装依赖时
+globs: 
+alwaysApply: false
+---
+# 依赖安全规范 (Dependency Security)
+
+## 1. 目标与重要性
+- **目标**: 最小化项目因依赖的第三方库中存在的漏洞而面临的风险。
+- **重要性**: 现代应用大量依赖开源库，这些库可能包含已知或未知的安全漏洞，对整个应用构成威胁。
+
+## 2. 依赖管理工具
+- **Python (Backend)**:
+    - **Poetry**: `README.md` 中指定使用 Poetry。Poetry 通过 `pyproject.toml` 和 `poetry.lock` 文件管理依赖，并能帮助解析和锁定传递依赖项的版本。
+    - **安全扫描工具**: 
+        - `safety`: 可以检查 Python 依赖中的已知安全漏洞。
+        - `pip-audit`: 另一个流行的 Python 依赖审计工具。
+        - GitHub Dependabot: 自动扫描仓库依赖并创建 PR 以更新到安全版本。
+- **JavaScript/TypeScript (Frontend)**:
+    - **npm/Yarn**: `README.md` 中指定使用 npm 或 Yarn。它们通过 `package.json` 和 `package-lock.json` (或 `yarn.lock`) 管理依赖。
+    - **安全扫描工具**:
+        - `npm audit`: npm 内置的依赖审计工具。
+        - `yarn audit`: Yarn 内置的依赖审计工具。
+        - GitHub Dependabot: 同样支持 JavaScript 项目。
+        - Snyk, Trivy 等第三方扫描工具。
+
+## 3. 最佳实践
+- **最小化依赖**: 
+    - 只添加确实需要的依赖项。
+    - 定期审查项目依赖，移除不再使用或不必要的库。
+- **使用锁文件 (Lock Files)**: 
+    - 始终将 `poetry.lock`, `package-lock.json`, 或 `yarn.lock` 文件提交到版本控制中。
+    - 锁文件确保了在不同环境和时间下安装的依赖版本是一致的，包括传递依赖项，有助于可复现构建和避免"在我机器上能跑"的问题。
+- **定期更新依赖**: 
+    - 积极将依赖项更新到最新的稳定版本，尤其是安全补丁版本。
+    - 使用工具 (如 Dependabot, `npm outdated`, `poetry show --outdated`) 检查过时的依赖。
+    - 更新前需进行测试，确保兼容性。
+- **自动化安全扫描**: 
+    - 将依赖安全扫描集成到 CI/CD 流水线中。
+    - 配置 Dependabot 或类似工具自动创建更新拉取请求。
+- **审查依赖来源**: 
+    - 尽可能从官方或受信任的源获取依赖。
+    - 对不熟悉或不常用的库进行背景调查。
+- **注意传递依赖**: 关注项目直接依赖的库所引入的传递依赖，它们也可能带来漏洞。
+- **版本固定策略**: 
+    - 对于非常关键或敏感的依赖，可以考虑固定到一个已知的安全版本，直到有充分理由进行升级。
+    - 但过度固定版本可能导致错过重要的安全更新和功能改进，需权衡。
+
+## 4. 漏洞响应
+- **监控漏洞数据库**: 关注 CVE (Common Vulnerabilities and Exposures) 和相关安全公告。
+- **快速响应**: 一旦发现项目中使用的依赖存在已知漏洞，应尽快评估风险并采取行动：
+    - 升级到修复漏洞的版本。
+    - 如果没有可用修复，寻找替代库或采取缓解措施。
+
+## 5. 遵循 `6.security/general.mdc` 中的通用安全规范。
+
+
+

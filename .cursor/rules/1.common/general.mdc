@@ -1,0 +1,54 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# General Coding Practices (通用编码实践)
+
+## 1. 可读性与可维护性 (Readability & Maintainability)
+- 代码应当易于理解、遵循一致的风格。
+- 函数和方法应保持简短，专注于单一职责 (Single Responsibility Principle - SRP)。
+- 使用有意义的变量名、函数名和类名。
+
+## 2. 注释与文档 (Comments & Documentation)
+- 为复杂逻辑或不直观的实现编写清晰的注释。
+- 编写清晰的文档 (如README, API文档, 设计文档) 说明功能、用法、设计决策和项目设置。
+
+## 3. DRY (Don't Repeat Yourself) 原则
+- 避免重复代码。通过函数、类或模块来封装和重用通用逻辑。
+
+## 4. SOLID 原则
+- 在面向对象设计中，尽可能遵循 SOLID 原则：
+    - **S**ingle Responsibility Principle (单一职责原则)
+    - **O**pen/Closed Principle (开闭原则)
+    - **L**iskov Substitution Principle (里氏替换原则)
+    - **I**nterface Segregation Principle (接口隔离原则)
+    - **D**ependency Inversion Principle (依赖倒置原则)
+
+## 5. 错误处理 (Error Handling)
+- 对可能发生错误的操作（如文件IO、API调用）进行适当的错误处理。
+- 提供清晰的错误信息，帮助定位问题。
+
+## 6. 配置管理 (Configuration Management)
+- 敏感配置（如API密钥）不应硬编码在代码中，考虑使用环境变量或配置文件。 (虽然MVP阶段无数据库，但此为通用实践)
+
+## 7. 利用生态与现代工具 (Leverage Ecosystem & Modern Tooling)
+- **优先使用成熟方案**: 优先使用社区验证过的、成熟的库和工具，避免不必要的自定义实现 (“造轮子”)。
+- **拥抱现代工具**: 积极评估和采用能够提升开发效率、代码质量和项目可维护性的现代工具和技术 (例如，考虑像 Context7 这样的文档查询与代码生成辅助工具等)。
+
+## 8. 开发者体验与自动化 (Developer Experience & Automation)
+- **简化上手流程**: 考虑初学者或新团队成员的体验，提供清晰的启动步骤和文档。
+- **自动化重复任务**: 对于常见的开发任务，如依赖安装、构建、测试、服务器启动等，应尽可能通过脚本或工具实现自动化。
+
+## 9. 代码审查 (Code Review)
+- 所有主要的代码更改都应经过团队成员的审查。
+- 审查应关注代码质量、功能正确性、可维护性和是否遵循项目规范。
+
+## 10. 项目初始化 (Project Initialization)
+*   在项目开始时，首先仔细阅读项目目录下的 `README.md` 文件并理解其内容，包括项目的目标、功能架构、技术栈和开发计划，确保对项目的整体架构和实现方式有清晰的认识。如果项目没有`README.md` 文档，自动创建一个。
+
+## 11. AI 助手交互特别约定 (AI Assistant Interaction Specifics)
+- **识别上下文丢失**: 为了帮助开发者快速识别 AI 助手是否可能“超出上下文”或未完全理解当前对话状态，AI 助手在每次回复前，应以“亲爱的墩墩，”作为开场白。
+
+
+

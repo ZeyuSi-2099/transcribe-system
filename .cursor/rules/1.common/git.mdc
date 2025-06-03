@@ -1,0 +1,89 @@
+---
+description: 辅助生成 git 提交信息
+globs: 
+alwaysApply: false
+---
+# Git Related Rules (Git相关规则)
+
+## 重要原则 (Important Principles)
+- **明确操作**: 不要自动提交 git 代码，除非得到用户明确的指示或确认。
+- **质量保障**: 提交前确保代码通过所有相关测试。
+- **原子性提交**: 避免大型提交，尽量将变更分解为小的、逻辑独立的提交。每个提交应代表一个完整的逻辑更改单元。
+
+## 1. 提交信息 (Commit Messages)
+- 遵循清晰、一致的提交信息格式。
+- **格式**: `<type>(<scope>): <subject>`
+  - **注意**: 冒号 `:` 后必须有一个空格。
+- **`<type>` (类型)**:
+  - `feat`: 新增功能 (feature)
+  - `fix`: 修复 bug
+  - `docs`: 文档注释 (documentation)
+  - `style`: 代码格式 (不影响代码运行的变动)
+  - `refactor`: 重构、优化 (既不增加新功能, 也不是修复bug)
+  - `perf`: 性能优化 (performance improvement)
+  - `test`: 增加或修改测试 (when adding missing tests or correcting existing tests)
+  - `chore`: 构建过程或辅助工具的变动 (e.g., updating dependencies, build scripts)
+  - `revert`: 回退到上一个版本
+  - `build`: 影响构建系统或外部依赖关系的更改 (例如：gulp, broccoli, npm)
+- **`<scope>` (范围)**: 可选，指明本次提交影响的范围 (如模块名、组件名、文件名等)。
+- **`<subject>` (简短描述)**:
+  - 用简洁的语言清晰描述本次提交的目的，首字母无需大写，末尾不加句号。
+  - 避免使用模糊的描述如 "update code" 或 "fix bug"。
+- **Commit Message Body (可选)**:
+  - 对于复杂的更改，或者当 `subject` 不足以完全说明时，应添加 Commit Message Body 进行更详细的解释。
+  - 若 `subject` 中描述的要点较多（例如超过两个），建议在 Body 中使用列表形式详细描述，每个要点以 `-` 或 `*` 开头。
+  - **示例**:
+    ```
+    feat(web): implement email verification workflow
+
+    - Add email verification token generation service
+    - Create verification email template with dynamic links
+    - Add API endpoint for token validation
+    - Update user model with verification status field
+    ```
+
+## 2. 分支管理 (Branching Strategy)
+- 主要开发工作应在特性分支 (feature branches) 或修复分支 (bugfix/fix branches) 上进行，而不是直接在 `main` 或 `develop` 分支上。
+- **常用分支命名约定**：
+
+| 分支类型   | 命名格式             | 示例                      |
+| ---------- | -------------------- | ------------------------- |
+| 功能分支   | feature/[描述]       | feature/user-auth         |
+| 修复分支   | fix/[问题ID]-[描述]  | fix/issue-42-login-crash  |
+| 发布分支   | release/[版本]       | release/v2.1.0            |
+| 热修复分支 | hotfix/[版本]-[描述] | hotfix/v2.0.1-payment-fix |
+  - (更详细的 `release` 和 `hotfix` 分支管理遵循 `.cursor/rules/1.common/gitflow.mdc` 中的 Git Flow 工作流规范)
+- 定期从主开发分支（通常是 `develop`）拉取最新更改到当前工作分支，以避免大的合并冲突。
+
+## 3. 合并请求/拉取请求 (Merge Requests / Pull Requests - PRs)
+- 在将特性分支或修复分支合并回主开发分支之前，应创建 PR。
+- PR 描述应清晰说明更改内容、目的、相关 issue (如果存在) 以及如何测试。
+- PR 应至少有一位团队成员审查通过后方可合并。
+
+## 4. .gitignore
+- 确保 `.gitignore` 文件配置正确，以排除不必要的文件和目录（如依赖目录 `node_modules`, `venv`; 编译产物 `.pyc`, `dist`; IDE配置文件 `.idea`, `.vscode` (除非团队共享); 操作系统生成文件 `.DS_Store`, `Thumbs.db`; 敏感文件 `*.env` (应使用 `.env.example`)等）。
+
+## 5. 代码同步 (Code Synchronization)
+- 在开始新工作或提交代码前，先从远程仓库拉取 (`git pull --rebase` 推荐，或 `git pull`) 最新代码，以减少冲突。
+- 定期推送 (`git push`) 本地提交到远程特性/修复分支，以备份和共享工作进展。
+
+## 6. 使用 GitLens 辅助理解和操作 (Using GitLens for Assistance)
+- **GitLens 简介**: GitLens 是 VS Code 的一个强大扩展，它可以极大地增强你对 Git 仓库的理解和交互能力。它提供了丰富的功能，如：
+    - **代码行追溯 (Blame)**: 快速查看每一行代码的最后修改者、提交信息和时间。
+    - **提交历史可视化**: 更直观地浏览和搜索提交历史。
+    - **分支和标签可视化**: 清晰地展示分支结构和标签。
+    - **文件历史**: 查看单个文件的完整修改历史。
+    - **比较功能**: 方便地比较不同分支、提交或工作区文件。
+- **如何帮助遵循规范**:
+    - **理解提交信息**: 通过 GitLens 的 "blame" 注释或文件历史视图，你可以轻松看到每次变更的提交信息，这有助于你学习和编写符合 `<type>(<scope>): <subject>` 格式的清晰提交。
+    - **分支管理**: GitLens 的分支可视化功能可以帮助你更好地理解当前所在分支、特性分支与 `develop` 分支的关系，以及合并操作的来源和去向，从而更好地遵循分支管理策略。
+    - **代码审查辅助**: 在进行代码审查或理解他人代码时，GitLens 可以快速提供代码的上下文和变更历史。
+- **小白用户建议**:
+    - **行内 Blame 信息**: 注意编辑器中每行代码末尾或旁边由 GitLens 显示的作者和提交摘要信息，点击它可以查看更详细的提交信息。
+    - **侧边栏视图**: 探索 VS Code 侧边栏中由 GitLens 添加的视图（通常在源代码管理旁边），这里可以浏览提交、分支、远程仓库等。
+    - **命令面板**: 通过 `Ctrl+Shift+P` (或 `Cmd+Shift+P`) 打开命令面板，输入 "GitLens" 可以看到所有可用的 GitLens 命令。
+- **重要提示**: 虽然 GitLens 提供了便捷的可视化操作，但理解基本的 Git 命令和概念（如 `commit`, `branch`, `merge`, `pull`, `push`）仍然非常重要。GitLens 是辅助工具，能帮你更好地理解和执行这些操作，但不能替代对 Git 工作流本身的理解。
+
+
+
+

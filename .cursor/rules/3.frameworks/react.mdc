@@ -1,0 +1,99 @@
+---
+description: 
+globs: **/*.jsx,**/*.tsx
+alwaysApply: false
+---
+# React Framework Rules (React框架规则)
+
+## 1. 组件化 (Componentization)
+- **单一职责原则 (SRP)**: 每个组件应专注于一个UI功能或业务逻辑。
+- **可复用性**: 设计可复用的组件，避免重复代码。
+- **组件大小**: 保持组件小巧，易于理解和维护。如果组件过于复杂，考虑拆分成更小的、专注的子组件。
+- **函数组件优先 (Functional Components First)**: 优先使用函数组件和 Hooks，而不是类组件。
+- **组合优于继承 (Composition over Inheritance)**: 在构建组件UI和逻辑时，优先考虑使用组件组合的方式，而不是类继承。
+
+## 2. Props
+- **类型定义**: 使用 TypeScript 为组件的 Props 定义清晰的接口 (Interfaces) 或类型别名 (Type Aliases)。
+- **Props 解构**: 在函数组件参数中解构 Props，提高可读性。
+- **Props 传递**: 避免过深的 Props 传递 ("prop drilling")。考虑使用 Context API 或状态管理库 (如 Zustand, Redux Toolkit) 进行跨层级状态共享。
+- **默认 Props (Default Props)**: 为可选的 Props 提供合理的默认值。
+
+## 3. State 管理 (State Management)
+- **状态就近原则**: 将状态尽可能放置在需要它的组件或其最近的共同父组件中。
+- **`useState`**: 用于组件内部的简单状态。
+- **`useReducer`**: 用于管理具有复杂更新逻辑或多个子值的状态。
+- **Context API**: 用于在组件树中全局共享状态，避免 Props drilling。但要注意 Context 变化可能导致不必要的重渲染，应谨慎使用或结合 `useMemo` 优化。
+- **全局状态管理库**: 对于大型应用或复杂的状态交互，仅在必要时考虑使用 Zustand, Redux Toolkit, Jotai, Recoil 等。
+
+## 4. Hooks
+- **自定义 Hooks (Custom Hooks)**: 将可复用的有状态逻辑封装到自定义 Hooks 中 (e.g., `useFormInput`, `useDebounce`)。
+  - **保持专注与简单**: 自定义 Hooks 应保持单一职责，避免过于复杂。
+- **Hooks 规则**: 
+  - 只在 React 函数组件或自定义 Hook 的顶层调用 Hooks。
+  - 不在循环、条件或嵌套函数中调用 Hooks (避免嵌套 Hooks)。
+
+## 5. 副作用处理 (Side Effects)
+- **`useEffect`**: 用于处理副作用，如数据获取、订阅、手动更改 DOM 等。
+- **依赖数组 (Dependency Array)**: 正确设置 `useEffect` 的依赖数组，避免无限循环或过时闭包。如果依赖项为空数组 `[]`，则 effect 只在组件挂载和卸载时运行一次。
+- **清理函数 (Cleanup Function)**: 在 `useEffect` 返回的清理函数中处理资源释放，如取消订阅、清除定时器等，这在组件卸载或依赖项变化导致 effect 重新运行时执行。
+
+## 6. 条件渲染 (Conditional Rendering)
+- 使用清晰、简洁的方式进行条件渲染 (e.g., 三元运算符, `&&` 操作符, `map` 渲染列表, 或使用早期返回 `return null;` 的模式)。
+- 避免在 JSX 中嵌入过于复杂的逻辑；如果逻辑复杂，考虑将其提取到组件的函数或变量中。
+
+## 7. 列表与 Keys (Lists and Keys)
+- 渲染列表时，为每个列表项提供一个稳定且唯一的 `key` prop，帮助 React 高效更新 DOM。
+- 避免使用数组索引作为 `key`，除非列表是静态的、项目不会重新排序、且没有其他唯一标识符。
+
+## 8. 性能优化 (Performance Optimization)
+- **避免不必要的重渲染**: 这是性能优化的核心目标。
+- **`React.memo`**: 用于优化函数组件，当 Props 未改变时阻止不必要的重渲染。
+- **`useMemo`**: 用于记忆计算结果，避免在每次渲染时重复进行昂贵的计算。
+- **`useCallback`**: 用于记忆回调函数，传递给子组件时避免因子组件不必要的重渲染 (通常与 `React.memo` 配合使用)。
+- **代码分割 (Code Splitting)**: 使用 `React.lazy` 和 `Suspense` 进行代码分割，按需加载组件，减少初始加载时间。
+- **分析与优化**: 使用 React DevTools Profiler 等工具分析组件渲染性能，并针对性优化。
+
+## 9. 表单处理 (Form Handling)
+- **受控组件 (Controlled Components)**: 优先使用受控组件处理表单输入，即表单元素的值由 React state 控制。
+- **表单验证**: 实现客户端表单验证，提供即时反馈。
+- **提交状态**: 正确处理表单的提交状态 (如禁用按钮、显示加载指示器)。
+- **加载与错误状态**: 在表单交互过程中（如提交时）向用户清晰显示加载状态和错误信息。
+- **复杂表单**: 对于复杂的表单逻辑，可以考虑使用成熟的表单库 (如 React Hook Form, Formik)。
+- **可访问性**: 确保表单元素具有正确的标签 (`<label>`) 和 ARIA 属性，以提升可访问性。
+
+## 10. 错误处理 (Error Handling)
+- **错误边界 (Error Boundaries)**: 使用类组件定义的错误边界来捕获其子组件树中发生的 JavaScript 错误，记录这些错误，并显示备用 UI。
+- **异步错误处理**: 正确处理异步操作（如 API 调用）中可能发生的错误，并更新 UI 以反映错误状态。
+- **用户友好信息**: 向用户显示清晰、易懂的错误信息，避免直接暴露技术细节。
+- **备用 UI**: 为错误状态提供合适的备用 UI，避免白屏或应用崩溃。
+- **错误记录**: 在生产环境中，将前端错误记录到监控系统 (如 Sentry)。
+- **优雅处理边缘情况**: 考虑并处理可能导致错误的边缘情况和异常输入。
+
+## 11. 测试 (Testing)
+- **单元测试**: 为独立的组件、Hooks 和工具函数编写单元测试。
+- **集成测试**: 测试多个组件协同工作的场景，验证组件间的交互和数据流。
+- **测试库**: 推荐使用 **React Testing Library** 进行组件测试，它鼓励从用户角度编写测试。
+- **测试用户交互**: 重点测试用户如何与应用交互 (如点击、输入、导航)。
+- **测试错误场景**: 确保应用的错误处理逻辑按预期工作。
+- **模拟数据与依赖**: 使用适当的模拟数据 (mock data) 和模拟依赖 (mocking dependencies) 来隔离测试单元。
+
+## 12. 可访问性 (Accessibility - a11y)
+- **语义化 HTML**: 始终使用正确的、语义化的 HTML 元素。
+- **键盘导航**: 确保所有交互元素都可以通过键盘访问和操作。
+- **屏幕阅读器**: 使用屏幕阅读器测试应用的可访问性。
+- **ARIA 属性**: 在必要时使用 ARIA (Accessible Rich Internet Applications) 属性来增强动态内容和复杂 UI 组件的可访问性。
+- **焦点管理**: 合理管理用户界面的焦点，特别是在动态内容变化或模态框弹出时。
+- **图像 Alt 文本**: 为所有意义图像提供描述性的 `alt` 文本；对于装饰性图像，使用空 `alt=""`。
+
+## 13. 代码组织与文件结构 (Code Organization & File Structure)
+- **项目结构**: 参照前端项目结构规则 (`.cursor/rules/4.structure/frontend.mdc`)。
+- **组件组织**: 将相关的组件组织在一起，例如按功能模块或特性划分目录。
+- **文件命名**: 
+    - 组件文件使用 `PascalCase.tsx` (或 `.jsx`)。
+    - Hooks 文件使用 `useCamelCase.ts` (或 `.js`)。
+- **样式靠近组件**: 考虑将组件的样式文件 (如 CSS Modules, SCSS 文件) 与组件本身放在同一目录下，或使用 CSS-in-JS 方案。
+- **导入/导出**: 使用清晰的导入和导出语句，推荐使用命名导出。
+- **文档注释**: 为复杂的组件逻辑、Props 接口、自定义 Hooks 等编写清晰的文档注释 (TSDoc/JSDoc)。
+
+
+
