@@ -1,6 +1,6 @@
 # FastAPI 核心框架
 fastapi==0.104.1
-uvicorn==0.24.0
+uvicorn[standard]==0.24.0
 
 # 数据库相关
 sqlmodel==0.0.14
@@ -57,7 +57,7 @@ reportlab==4.4.1                  # PDF报告生成
 jinja2==3.1.2                     # HTML模板引擎
 wordcloud==1.9.2                  # 词云生成
 textstat==0.7.7                   # 文本可读性统计
-supabase==2.15.2
+supabase==2.3.4
 pandas==2.2.3
 
 # 测试依赖
