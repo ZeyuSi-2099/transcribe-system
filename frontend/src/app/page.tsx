@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { useState, useRef, useEffect, useCallback } from "react"
+import { useState, useRef, useEffect, useCallback, Suspense } from "react"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -534,6 +534,22 @@ function TranscriptionConverter({ className }: TranscriptionConverterProps) {
   )
 }
 
+// 创建一个包装的加载组件
+function PageLoading() {
+  return (
+    <div className="flex h-screen items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
+        <p className="text-gray-600">加载中...</p>
+      </div>
+    </div>
+  )
+}
+
 export default function TranscriptionConverterDemo() {
-  return <TranscriptionConverter />
+  return (
+    <Suspense fallback={<PageLoading />}>
+      <TranscriptionConverter />
+    </Suspense>
+  )
 }
