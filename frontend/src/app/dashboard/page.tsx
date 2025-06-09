@@ -254,11 +254,11 @@ function TranscriptionConverter({ className }: TranscriptionConverterProps) {
       <div className="flex-1 overflow-hidden ml-14">
         <div className={cn("h-full p-6 overflow-y-auto", className)}>
           <div className="w-full max-w-6xl mx-auto">
-      <div className="flex flex-col space-y-6">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold text-foreground">笔录转换工具</h1>
-          <p className="text-muted-foreground">支持文本输入和文件上传两种方式，自动转换对话式笔录为叙述式笔录</p>
-        </div>
+            <div className="flex flex-col space-y-6">
+              <div className="space-y-2">
+                <h1 className="text-3xl font-bold text-foreground">笔录转换工具</h1>
+                <p className="text-muted-foreground">支持文本输入和文件上传两种方式，自动转换对话式笔录为叙述式笔录</p>
+              </div>
 
               {/* 规则选择区域 */}
               <Card className="border-blue-200 bg-blue-50">
@@ -314,222 +314,223 @@ function TranscriptionConverter({ className }: TranscriptionConverterProps) {
                 </CardContent>
               </Card>
 
-        <Tabs defaultValue="text" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="text" className="flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              文本输入
-            </TabsTrigger>
-            <TabsTrigger value="upload" className="flex items-center gap-2">
-              <Upload className="h-4 w-4" />
-              文件上传
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="text" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-medium">原始笔录</h3>
-                  {inputText && (
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={handleClearInput}
-                    >
-                      清空
-                    </Button>
-                  )}
-                </div>
-                <div className="relative border border-input bg-background rounded-lg focus-within:ring-1 focus-within:ring-ring">
-                  <Textarea
-                    ref={inputRef}
-                    value={inputText}
-                    onChange={handleInputChange}
-                    placeholder="请在此处粘贴或输入原始笔录内容..."
+              <Tabs defaultValue="text" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="text" className="flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    文本输入
+                  </TabsTrigger>
+                  <TabsTrigger value="upload" className="flex items-center gap-2">
+                    <Upload className="h-4 w-4" />
+                    文件上传
+                  </TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="text" className="space-y-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-medium">原始笔录</h3>
+                        {inputText && (
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={handleClearInput}
+                          >
+                            清空
+                          </Button>
+                        )}
+                      </div>
+                      <div className="relative border border-input bg-background rounded-lg focus-within:ring-1 focus-within:ring-ring">
+                        <Textarea
+                          ref={inputRef}
+                          value={inputText}
+                          onChange={handleInputChange}
+                          placeholder="请在此处粘贴或输入原始笔录内容..."
                           className="min-h-[300px] resize-none border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
-                  />
-                </div>
-              </div>
+                        />
+                      </div>
+                    </div>
 
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-medium">转换结果</h3>
-                  {conversionResult && (
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={handleClearResult}
-                    >
-                      清空
-                    </Button>
-                  )}
-                </div>
-                <div className="relative border border-input bg-background rounded-lg">
-                  <Textarea
-                    ref={outputRef}
-                    value={conversionResult?.converted_text || ''}
-                    readOnly
-                    placeholder="转换后的内容将显示在这里..."
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-medium">转换结果</h3>
+                        {conversionResult && (
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={handleClearResult}
+                          >
+                            清空
+                          </Button>
+                        )}
+                      </div>
+                      <div className="relative border border-input bg-background rounded-lg">
+                        <Textarea
+                          ref={outputRef}
+                          value={conversionResult?.converted_text || ''}
+                          readOnly
+                          placeholder="转换后的内容将显示在这里..."
                           className="min-h-[300px] resize-none border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
-                  />
-                </div>
-              </div>
-            </div>
-
-                  <div className="flex justify-center gap-4">
-              <Button
-                onClick={handleConvert}
-                disabled={!inputText.trim() || isConverting}
-                      className="gap-2"
-              >
-                {isConverting ? (
-                  <>
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          转换中...
-                  </>
-                ) : (
-                  <>
-                    <Wand2 className="size-4" />
-                    开始转换
-                  </>
-                )}
-              </Button>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="upload" className="space-y-6">
-            <FileUploadZone 
-              onUploadSuccess={handleFileUploadSuccess}
-              onUploadError={(error) => console.error('Upload error:', error)}
-            />
-          </TabsContent>
-        </Tabs>
-
-        {/* 转换结果详情 */}
-        {conversionResult && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Eye className="h-5 w-5" />
-                转换结果详情
-              </CardTitle>
-              <CardDescription>
-                查看详细的转换信息和质量评估
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="space-y-1">
-                  <p className="text-sm font-medium">任务ID</p>
-                  <p className="text-2xl font-bold">{conversionResult.id}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm font-medium">状态</p>
-                  <Badge variant={conversionResult.status === 'completed' ? 'default' : 'destructive'}>
-                    {conversionResult.status === 'completed' ? '已完成' : '失败'}
-                  </Badge>
-                </div>
-                {conversionResult.processing_time && (
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium">处理时间</p>
-                    <p className="text-2xl font-bold">{conversionResult.processing_time.toFixed(2)}s</p>
-                  </div>
-                )}
-                {conversionResult.quality_metrics?.overall_score && (
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium">质量评分</p>
-                    <div className="flex items-center gap-2">
-                      <Progress value={conversionResult.quality_metrics.overall_score} className="flex-1" />
-                      <span className="text-sm font-medium">
-                        {Math.round(conversionResult.quality_metrics.overall_score)}%
-                      </span>
+                        />
+                      </div>
                     </div>
                   </div>
-                )}
-              </div>
 
-              {/* 质量指标详情 */}
-              {conversionResult.quality_metrics && (
-                <div className="space-y-3">
-                  <h4 className="text-sm font-medium flex items-center gap-2">
-                    <BarChart3 className="h-4 w-4" />
-                    质量指标
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                    {Object.entries(conversionResult.quality_metrics).map(([key, value]) => {
-                      if (key === 'overall_score') return null
-                            
-                            // 处理嵌套对象
-                            const formatValue = (val: any): string => {
-                              if (typeof val === 'number') {
-                                return `${val.toFixed(2)}${key.includes('score') || key.includes('rate') ? '%' : ''}`
-                              } else if (typeof val === 'object' && val !== null) {
-                                // 如果是对象，显示其主要属性
-                                if (val.score !== undefined) return `${val.score.toFixed(2)}%`
-                                if (val.rate !== undefined) return `${(val.rate * 100).toFixed(2)}%`
-                                if (val.count !== undefined) return `${val.count}`
-                                // 对于复杂对象，显示关键信息
-                                const entries = Object.entries(val)
-                                if (entries.length > 0) {
-                                  const [firstKey, firstValue] = entries[0]
-                                  if (typeof firstValue === 'number') {
-                                    return `${firstValue.toFixed(2)}`
-                                  }
-                                }
-                                return '已计算'
-                              } else {
-                                return String(val)
-                              }
-                            }
-                            
-                            // 格式化键名显示
-                            const formatKey = (k: string): string => {
-                              const keyMap: { [key: string]: string } = {
-                                'character_count': '字符统计',
-                                'word_count': '词汇统计', 
-                                'compression_ratio': '压缩比例',
-                                'content_preservation': '内容保留',
-                                'language_quality': '语言质量',
-                                'structure_metrics': '结构指标',
-                                'rule_application': '规则应用',
-                                'conversion_summary': '转换摘要',
-                                'processing_stages': '处理阶段'
-                              }
-                              return keyMap[k] || k.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
-                            }
-                            
-                      return (
-                        <div key={key} className="flex justify-between">
-                                <span className="text-muted-foreground">{formatKey(key)}:</span>
-                          <span className="font-medium">
-                                  {formatValue(value)}
-                          </span>
-                        </div>
-                      )
-                    })}
+                  <div className="flex justify-center gap-4">
+                    <Button
+                      onClick={handleConvert}
+                      disabled={!inputText.trim() || isConverting}
+                      className="gap-2"
+                    >
+                      {isConverting ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          转换中...
+                        </>
+                      ) : (
+                        <>
+                          <Wand2 className="size-4" />
+                          开始转换
+                        </>
+                      )}
+                    </Button>
                   </div>
-                </div>
-              )}
+                </TabsContent>
+                
+                <TabsContent value="upload" className="space-y-6">
+                  <FileUploadZone 
+                    onUploadSuccess={handleFileUploadSuccess}
+                    onUploadError={(error) => console.error('Upload error:', error)}
+                  />
+                </TabsContent>
+              </Tabs>
 
-              {conversionResult.status === 'completed' && (
-                <div className="flex justify-center pt-4">
-                  <Button
-                    onClick={() => window.open(`/results/${conversionResult.id}`, '_blank')}
-                    className="w-full max-w-xs gap-2"
-                  >
-                    <Eye className="size-4" />
-                    查看详细结果和对比
-                  </Button>
-                </div>
+              {/* 转换结果详情 */}
+              {conversionResult && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Eye className="h-5 w-5" />
+                      转换结果详情
+                    </CardTitle>
+                    <CardDescription>
+                      查看详细的转换信息和质量评估
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium">任务ID</p>
+                        <p className="text-2xl font-bold">{conversionResult.id}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium">状态</p>
+                        <Badge variant={conversionResult.status === 'completed' ? 'default' : 'destructive'}>
+                          {conversionResult.status === 'completed' ? '已完成' : '失败'}
+                        </Badge>
+                      </div>
+                      {conversionResult.processing_time && (
+                        <div className="space-y-1">
+                          <p className="text-sm font-medium">处理时间</p>
+                          <p className="text-2xl font-bold">{conversionResult.processing_time.toFixed(2)}s</p>
+                        </div>
+                      )}
+                      {conversionResult.quality_metrics?.overall_score && (
+                        <div className="space-y-1">
+                          <p className="text-sm font-medium">质量评分</p>
+                          <div className="flex items-center gap-2">
+                            <Progress value={conversionResult.quality_metrics.overall_score} className="flex-1" />
+                            <span className="text-sm font-medium">
+                              {Math.round(conversionResult.quality_metrics.overall_score)}%
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* 质量指标详情 */}
+                    {conversionResult.quality_metrics && (
+                      <div className="space-y-3">
+                        <h4 className="text-sm font-medium flex items-center gap-2">
+                          <BarChart3 className="h-4 w-4" />
+                          质量指标
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                          {Object.entries(conversionResult.quality_metrics).map(([key, value]) => {
+                            if (key === 'overall_score') return null
+                                  
+                                  // 处理嵌套对象
+                                  const formatValue = (val: any): string => {
+                                    if (typeof val === 'number') {
+                                      return `${val.toFixed(2)}${key.includes('score') || key.includes('rate') ? '%' : ''}`
+                                    } else if (typeof val === 'object' && val !== null) {
+                                      // 如果是对象，显示其主要属性
+                                      if (val.score !== undefined) return `${val.score.toFixed(2)}%`
+                                      if (val.rate !== undefined) return `${(val.rate * 100).toFixed(2)}%`
+                                      if (val.count !== undefined) return `${val.count}`
+                                      // 对于复杂对象，显示关键信息
+                                      const entries = Object.entries(val)
+                                      if (entries.length > 0) {
+                                        const [firstKey, firstValue] = entries[0]
+                                        if (typeof firstValue === 'number') {
+                                          return `${firstValue.toFixed(2)}`
+                                        }
+                                      }
+                                      return '已计算'
+                                    } else {
+                                      return String(val)
+                                    }
+                                  }
+                                  
+                                  // 格式化键名显示
+                                  const formatKey = (k: string): string => {
+                                    const keyMap: { [key: string]: string } = {
+                                      'character_count': '字符统计',
+                                      'word_count': '词汇统计', 
+                                      'compression_ratio': '压缩比例',
+                                      'content_preservation': '内容保留',
+                                      'language_quality': '语言质量',
+                                      'structure_metrics': '结构指标',
+                                      'rule_application': '规则应用',
+                                      'conversion_summary': '转换摘要',
+                                      'processing_stages': '处理阶段'
+                                    }
+                                    return keyMap[k] || k.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+                                  }
+                                  
+                            return (
+                              <div key={key} className="flex justify-between">
+                                      <span className="text-muted-foreground">{formatKey(key)}:</span>
+                                <span className="font-medium">
+                                        {formatValue(value)}
+                                </span>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {conversionResult.status === 'completed' && (
+                      <div className="flex justify-center pt-4">
+                        <Button
+                          onClick={() => window.open(`/results/${conversionResult.id}`, '_blank')}
+                          className="w-full max-w-xs gap-2"
+                        >
+                          <Eye className="size-4" />
+                          查看详细结果和对比
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
               )}
-            </CardContent>
-          </Card>
-        )}
             </div>
           </div>
         </div>
       </div>
+    </div>
   )
 }
 
