@@ -5,7 +5,7 @@
 ### 🌐 当前生产环境配置
 - **前端部署平台**: Vercel
 - **后端部署平台**: Render
-- **数据库**: Supabase Cloud
+- **数据库**: SQLite (本地文件数据库)
 - **域名**: transcribe.solutions
 - **LLM服务**: Deepseek API
 
@@ -13,7 +13,7 @@
 - **主域名**: https://www.transcribe.solutions
 - **前端仓库**: https://github.com/ZeyuSi-2099/transcribe-system (deploy-main 分支)
 - **后端API**: https://transcribe-system.onrender.com
-- **数据库**: https://ghbtjyetllhcdddhjygi.supabase.co
+- **数据库**: SQLite文件 (存储在Render服务器本地)
 
 ### ⚙️ 关键配置文件
 1. **Vercel配置** (`frontend/vercel.json`):
@@ -27,8 +27,8 @@
 ```
 
 2. **环境变量配置**:
-   - Vercel: `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - Render: `SUPABASE_URL`, `SUPABASE_KEY`, `DEEPSEEK_API_KEY`
+   - Vercel: `NEXT_PUBLIC_API_URL` (Supabase相关变量已配置但未使用)
+   - Render: `DEEPSEEK_API_KEY` (数据库使用SQLite文件，无需额外配置)
 
 3. **部署分支**: `deploy-main`
 
@@ -36,7 +36,27 @@
 1. **解决Root Directory配置**: 在Vercel中设置Root Directory为`frontend`
 2. **删除冲突配置文件**: 移除项目根目录的vercel.json和next.config.ts
 3. **添加框架识别配置**: 在frontend目录下创建vercel.json明确指定Next.js框架
-4. **环境变量配置**: 正确配置所有必要的环境变量
+4. **简化数据库配置**: 使用SQLite替代Supabase以避免部署时的依赖冲突
+5. **环境变量配置**: 正确配置所有必要的环境变量
+
+### 📊 数据库配置详情
+
+#### 当前使用：SQLite
+- **类型**: 本地文件数据库
+- **位置**: Render服务器本地 (`./transcribe_system.db`)
+- **优势**: 
+  - 🚀 部署简单，无需外部数据库服务
+  - 💰 无额外费用
+  - ⚡ 快速启动和测试
+- **限制**: 
+  - 📊 数据存储在单个服务器实例
+  - 🔄 服务重启时数据会重置 (Render的限制)
+  - 📈 不适合大规模并发
+
+#### 未来升级计划：迁移到Supabase
+- **配置文件**: 已预留 `backend/app/core/supabase_client.py`
+- **环境变量**: 前端已配置Supabase连接信息
+- **迁移时机**: 当需要持久化数据存储和用户认证时
 
 ## 🚀 部署架构概览
 
