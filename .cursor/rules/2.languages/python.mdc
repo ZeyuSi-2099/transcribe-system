@@ -1,0 +1,67 @@
+---
+description: 
+globs: **/*.py
+alwaysApply: false
+---
+# Python Specific Rules (Python 专属规则)
+
+## 1. 代码风格 (Code Style)
+- **PEP 8**: 严格遵循 PEP 8 (Style Guide for Python Code)。
+- **Formatter (Ruff/Black)**: 使用 `Ruff` (或 `Black`) 自动格式化代码，确保风格一致。
+  - 在项目根目录配置 `pyproject.toml` 以指定 Ruff/Black 的配置。
+- **Linter (Ruff/Flake8)**: 使用 `Ruff` (或 `Flake8`) 进行代码静态检查。
+  - 解决 Linter 报告的所有警告和错误。
+- **文档字符串 (Docstrings)**: 使用符合 PEP 257 (Docstring Conventions) 的文档字符串来清晰地记录函数、类和模块的用途、参数、返回值等。
+
+## 2. 类型提示 (Type Hinting)
+- **PEP 484**: 积极使用类型提示，尤其是在函数签名和关键数据结构中，以增强代码可读性和类型安全性。
+- **Mypy (可选, Ruff已集成部分功能)**: (如果Ruff的类型检查不够，可以考虑引入Mypy) 对代码进行静态类型检查。
+- 目标是尽可能提高代码的类型覆盖率。
+
+## 3. 虚拟环境与依赖管理 (Virtual Environments & Dependency Management)
+- **Poetry**: 使用 Poetry 管理项目依赖和虚拟环境。
+  - `pyproject.toml`: 定义项目元数据和依赖。
+  - `poetry.lock`: 锁定依赖版本，确保构建的可复现性。
+- **命令**:
+  - `poetry install`: 安装依赖。
+  - `poetry add <package>`: 添加新的依赖。
+  - `poetry run <command>`: 在项目的虚拟环境中运行命令。
+- 不要在全局 Python 环境中安装项目依赖。
+
+## 4. 导入规范 (Imports)
+- 遵循 PEP 8 关于导入的规范。
+- 使用绝对导入优于相对导入 (e.g., `from my_project.module import my_class`)。
+- 导入顺序: 标准库 -> 第三方库 -> 本地应用/库特定导入。按字母排序。
+- 使用 `Ruff` (或 `isort`) 自动管理和格式化导入语句。
+
+## 5. 命名约定 (Naming Conventions)
+- `snake_case` 用于函数名、方法名、变量名和模块名。
+- `PascalCase` (或 `CapWords`) 用于类名。
+- `UPPER_SNAKE_CASE` 用于常量。
+
+## 6. 数据类与模型 (Data Classes & Models)
+- **数据表示**: 优先使用 `dataclasses` (标准库) 或 `Pydantic` 模型来定义和校验结构化数据。这有助于提高代码的清晰度和数据的可靠性。
+
+## 7. Pythonic 编码实践 (Pythonic Coding Practices)
+- **上下文管理器 (Context Managers)**: 对于需要获取和释放的资源（如文件操作、数据库连接、锁等），应使用 `with` 语句和上下文管理器，以确保资源得到正确和及时的管理。
+- **推导式与生成器 (Comprehensions & Generators)**: 优先使用列表推导式 (`list comprehensions`)、字典推导式 (`dict comprehensions`)、集合推导式 (`set comprehensions`) 以及生成器表达式 (`generator expressions`) 来创建简洁、高效且易读的序列和迭代器。
+
+## 8. FastAPI 特定 (FastAPI Specifics)
+- **Pydantic 模型**: 在 FastAPI 应用中，使用 Pydantic 模型专门定义 API 的请求体、响应体，并进行数据校验。
+- **依赖注入 (Dependency Injection)**: 善用 FastAPI 的依赖注入系统管理共享逻辑、数据库会话、认证授权等资源。
+- **异步优先 (Async First)**: 对于 IO 密集型操作（如网络请求、文件读写），在 FastAPI 中应优先使用 `async` 和 `await` 实现异步处理，以提高应用性能和并发能力。
+
+## 9. 异常处理 (Exception Handling)
+- **明确具体**: 抛出具体的、有意义的异常类型，而不是泛泛的 `Exception`。
+- **自定义异常**: 自定义异常应继承自 Python 内建的异常类（如 `ValueError`, `TypeError` 等）或更具体的应用异常基类。
+- **保证健壮性**: 合理的异常处理是保证程序健枉性的关键，应覆盖所有可能出错的路径。
+
+## 10. 测试 (Testing)
+- **测试规则引用**: Python 部分的详细测试规范、策略和工具使用见项目 `5.testing/` 目录下的相关规则。
+- **文件名约定**: 测试文件名应遵循 `test_*.py` 或 `*_test.py` 的模式。
+- **测试框架 (Testing Framework)**: 推荐使用 `pytest` 作为主要的测试框架，利用其强大的特性和插件生态。
+- **测试覆盖率 (Test Coverage)**: 目标是保持并持续提高代码的测试覆盖率，确保关键逻辑都得到充分测试。
+
+## 11. 面向对象设计 (Object-Oriented Design)
+- **SOLID 原则**: 在进行面向对象设计时，应努力遵循 SOLID 原则（详见 `@1.common/general` 中的定义），以构建模块化、可维护、可扩展且易于理解的 Python 代码。
+

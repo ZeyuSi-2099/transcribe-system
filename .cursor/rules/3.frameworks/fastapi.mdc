@@ -1,0 +1,58 @@
+---
+description: 
+globs: **/*.py
+alwaysApply: false
+---
+# FastAPI Framework Rules (FastAPI框架规则)
+
+## 1. 项目结构 (Project Structure)
+- 参照后端项目结构规则 (`.cursor/rules/4.structure/backend.mdc`)。
+- 清晰地组织路由 (routers)、模型 (models/schemas)、服务 (services/crud)、依赖 (dependencies) 等模块。
+
+## 2. 路由定义 (Router Definition)
+- 使用 `APIRouter` 将相关的路径操作组织到不同的模块中。
+- 路径操作函数应保持简洁，主要负责请求校验、调用业务逻辑服务、以及构建响应。
+  - **确保为所有路径操作函数的参数和返回值使用明确的Python类型提示。**
+- 使用清晰、一致的路径参数、查询参数和请求体定义。
+- **在响应中始终使用恰当且语义化的 HTTP 状态码** (e.g., `200 OK`, `201 Created`, `400 Bad Request`, `404 Not Found`)。
+
+## 3. 数据校验与序列化 (Data Validation & Serialization)
+- **Pydantic 模型**: 
+  - 强制使用 Pydantic 模型定义所有请求体 (request bodies) 和响应体 (response models)。
+  - 利用 Pydantic 进行数据校验，确保进入业务逻辑层的数据是有效和符合预期的。
+  - 在模型中使用类型提示、默认值、字段约束 (e.g., `Field(..., min_length=1)`)。
+
+## 4. 依赖注入 (Dependency Injection)
+- 充分利用 FastAPI 的依赖注入系统 (`Depends`) 来管理：
+  - 数据库会话 (Database sessions)。
+  - 认证与授权逻辑 (Authentication & Authorization)。
+  - 可重用的业务逻辑或工具函数。
+- **依赖项本身也应使用明确的Python类型提示。**
+- 依赖项应尽可能小且专注单一职责。
+
+## 5. 异步操作 (Asynchronous Operations)
+- **`async` 和 `await`**: 对于所有I/O密集型操作（如数据库查询、外部API调用），务必使用 `async def` 定义路径操作函数和相关服务函数，并使用 `await`。
+- 确保使用的数据库驱动和HTTP客户端支持异步操作 (e.g., `asyncpg` for PostgreSQL, `httpx` for HTTP calls)。
+
+## 6. 错误处理 (Error Handling)
+- 使用 FastAPI 的 `HTTPException` 来返回标准的 HTTP 错误响应（包含正确的状态码）。
+- 可以定义全局的异常处理器 (`@app.exception_handler()`) 来统一处理特定类型的异常，并返回规范的错误响应格式。
+
+## 7. 后台任务 (Background Tasks)
+- 对于不需要立即响应给客户端的耗时操作，使用 FastAPI 的 `BackgroundTasks`。
+- 注意后台任务的错误处理和资源管理。
+
+## 8. API 文档 (API Documentation)
+- 在路径操作函数、参数、Pydantic 模型中使用清晰的 `title`, `description`, `summary`, `tags` 等，以生成高质量的 OpenAPI (Swagger/ReDoc) 文档。
+- 为 Pydantic 模型字段添加 `description` 或 `example`。
+
+## 9. 安全 (Security)
+- 参照 `.cursor/rules/6.security/` 下的安全规则。
+- 特别注意 FastAPI 中的认证 (Authentication) 和授权 (Authorization) 实现。
+
+## 10. 测试 (Testing)
+- 使用 FastAPI 的 `TestClient` 编写 API 测试用例。
+- 测试应覆盖正常的业务流程、边界条件和错误情况。
+
+
+

@@ -1,0 +1,85 @@
+---
+description: 
+globs: **/*.py
+alwaysApply: false
+---
+# 后端结构与开发规范 (Backend Structure & Development)
+
+## 1. 技术栈 (Technology Stack)
+- **编程语言**: Python
+- **Web 框架**: FastAPI (用于构建 API 服务)
+- **核心文本处理**: Hugging Face `transformers` 库 (用于加载和运行语言模型或与 LLM API 交互)
+- **包管理与虚拟环境**: Poetry
+
+## 2. 项目结构 (Project Structure)
+- 推荐遵循 FastAPI 项目的最佳实践，将应用逻辑模块化。例如：
+  ```
+  .
+  ├── app/                  # FastAPI 应用代码
+  │   ├── __init__.py
+  │   ├── main.py           # FastAPI 应用实例和全局配置
+  │   ├── api/              # API 端点 (routers)
+  │   │   ├── __init__.py
+  │   │   └── v1/
+  │   │       ├── __init__.py
+  │   │       └── endpoints/
+  │   │           ├── __init__.py
+  │   │           └── transcript_processing.py # 示例：处理笔录的端点
+  │   ├── services/         # 业务逻辑服务 (例如，LLM 调用、文本处理)
+  │   │   ├── __init__.py
+  │   │   └── llm_service.py
+  │   ├── models/           # Pydantic 模型 (请求体、响应体)
+  │   │   ├── __init__.py
+  │   │   └── transcript_models.py
+  │   ├── core/             # 核心配置、依赖项等
+  │   │   ├── __init__.py
+  │   │   └── config.py
+  │   └── utils/            # 通用工具函数
+  │       ├── __init__.py
+  │       └── text_utils.py
+  ├── tests/                # 测试代码
+  │   ├── __init__.py
+  │   └── backend/
+  │       ├── __init__.py
+  │       └── test_transcript_processing.py
+  ├── pyproject.toml        # Poetry 配置文件
+  └── README.md
+  ```
+- **模块化**: 将不同的功能（如 API 路由、服务逻辑、数据模型）分离到各自的模块/目录中。
+
+## 3. FastAPI 最佳实践
+- **Pydantic 模型**: 对所有 API 请求体和响应体使用 Pydantic 模型进行数据校验和序列化。
+- **依赖注入 (Dependency Injection)**: 合理使用 FastAPI 的依赖注入系统来管理依赖项 (如数据库连接、LLM 服务实例)。
+- **异步操作**: 对于 I/O 密集型操作 (如调用外部 LLM API、文件读写)，应使用 `async` 和 `await`。
+- **清晰的 API 端点**:
+    - 遵循 RESTful 原则设计 API 端点。
+    - 为每个端点提供清晰的 `summary` 和 `description`，以便自动生成的 API 文档更易于理解。
+- **错误处理**: 实现统一的错误处理机制，返回标准化的错误响应。
+
+## 4. LLM 集成
+- **服务封装**: 将与 LLM 相关的逻辑封装在专门的服务模块中 (如 `llm_service.py`)。
+- **配置管理**: LLM 模型路径、API 密钥等敏感信息应通过环境变量或配置文件管理，不应硬编码。
+- **Prompt Engineering**: Prompt 设计应与代码分离，方便迭代和管理。可以考虑将 prompts 存储在单独的文件或配置中。
+
+## 5. 代码质量
+- **类型提示 (Type Hinting)**: 严格使用 Python 类型提示，并配合 Mypy (或 Ruff 内置的类型检查) 进行静态类型检查。
+- **Linter/Formatter**: 使用 Ruff (或 Black, Flake8) 保证代码风格一致性和质量。
+- **遵循 `1.common/general` 中的通用编码实践。**
+
+## 6. 任务拆解参考 (来自 README.md)
+- **任务 1.1：项目初始化与基础 API 端点**
+    - 使用 Poetry 初始化 FastAPI 后端项目。
+    - 搭建基础项目结构。
+    - 实现一个接收原始文本、被访者选择和规则配置（开关状态）的 API 端点 (POST请求)。
+    - 实现一个返回处理后文本的 API 端点。
+- **任务 1.2：发言人识别逻辑**
+    - 实现从上传文本中识别发言人标记并提取发言人名称的逻辑。
+- **任务 1.3：集成 Hugging Face `transformers`与 LLM**
+    - 在 FastAPI 应用中集成 Hugging Face `transformers` 库。
+    - 配置加载本地 LLM 模型的逻辑（或连接云端 LLM API 的客户端）。
+    - 初步实现调用 LLM 进行文本处理的核心函数。
+- **任务 1.4：API 逻辑完善与测试**
+    - 将发言人识别、LLM 文本处理逻辑整合到 API 端点中。
+
+
+

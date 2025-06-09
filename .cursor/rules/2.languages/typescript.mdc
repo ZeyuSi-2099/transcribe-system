@@ -1,0 +1,89 @@
+---
+description: 
+globs: **/*.ts, **/*.tsx,**/*.d.ts
+alwaysApply: false
+---
+# TypeScript Specific Rules (TypeScript 专属规则)
+
+## 1. 代码风格与格式化 (Code Style & Formatting)
+- **Prettier**: 使用 Prettier 进行代码自动格式化，确保团队风格一致。
+  - 在项目根目录配置 `.prettierrc` 或 `package.json`中的 Prettier 配置。
+- **ESLint**: 使用 ESLint 进行代码静态检查和风格规范。
+  - 配置 `.eslintrc.js` (或 `.eslintrc.json`)，集成 TypeScript 支持 (`@typescript-eslint/parser`, `@typescript-eslint/eslint-plugin`)。
+  - 解决 ESLint 报告的所有警告和错误。
+
+## 2. 类型系统 (Type System)
+- **强类型**: 充分利用 TypeScript 的类型系统。
+  - 避免使用 `any` 类型，对于未知类型优先使用 `unknown`，除非绝对必要且有充分理由。
+- **接口与类型别名 (Interfaces & Type Aliases)**:
+  - 优先使用 `interface` 定义对象的结构。
+  - 使用 `type` 定义联合类型、交叉类型、映射类型、元组或更复杂的类型别名。
+- **明确返回值类型**: 公共函数和方法应明确声明返回值类型。
+- **`strict` 模式**: 在 `tsconfig.json` 中启用所有 `strict` 模式相关的编译选项 (如 `strictNullChecks`, `strictFunctionTypes` 等) 以获得更强的类型检查。
+- **工具类型与泛型**:
+  - 充分利用 TypeScript 的内置工具类型 (如 `Partial`, `Readonly`, `Record`, `Pick`, `Omit` 等)。
+  - 使用泛型 (`Generics`) 实现可复用的类型模式和函数。
+- **可辨识联合类型 (Discriminated Unions)**: 利用可辨识联合类型配合类型守卫来提高处理复杂数据结构时的类型安全性。
+- **类型守卫 (Type Guards)**: 使用类型守卫 (如 `typeof`, `instanceof`, `in` 或自定义的 `is` 操作符函数) 在运行时进行类型检查，缩小类型范围。
+- **`readonly`**: 对不应被修改的属性使用 `readonly` 修饰符，增强不可变性。
+- **避免不必要的类型断言**: 类型断言 (`as Type` 或 `<Type>`) 应谨慎使用，它会绕过类型检查。优先通过改进类型定义或使用类型守卫来避免断言。
+
+## 3. 模块与导入/导出 (Modules & Imports/Exports)
+- **ES Modules**: 使用 ES模块标准 (`import`/`export`)。
+- **路径别名 (Path Aliases)**: 在 `tsconfig.json` (和构建工具配置如 Webpack/Next.js) 中配置路径别名 (e.g., `@/components/*`) 以简化导入路径，提高可读性。
+- **命名导出优先 (Named Exports Preferred)**: 优先使用命名导出，使导入更明确。默认导出 (`export default`) 仅在模块主要导出一个实体时使用。
+- **避免循环依赖 (Avoid Circular Dependencies)**: 注意模块间的依赖关系，避免出现循环依赖。
+
+## 4. 代码组织 (Code Organization)
+- **就近原则**: 类型定义应尽可能靠近其使用的地方。
+- **共享类型**:
+    - 共享的类型和接口应从专用的类型文件 (如 `types.ts` 或领域相关的 `*.types.ts`) 中导出。
+    - 考虑将项目级的共享类型统一放在一个 `types` 或 `interfaces` 目录下。
+- **桶导出 (Barrel Exports)**: 使用 `index.ts` 文件（桶）来重新导出一个目录下的多个模块，简化外部导入。
+- **组件 Props**: React 组件的 Props 类型定义通常与其组件文件共同放置。
+
+## 5. 命名约定 (Naming Conventions)
+- `camelCase` 用于变量名、函数名、方法名。
+  - **描述性名称**: 推荐使用带有辅助动词或明确含义的名称（例如，`isLoading`, `hasError`, `fetchUserData`）。
+- `PascalCase` 用于类名、接口名、类型别名、枚举名。
+  - **React Props 接口**: React 组件的 Props 接口推荐使用 `PascalCase` 并以 `Props` 为后缀 (例如，`ButtonProps`)。
+- `UPPER_SNAKE_CASE` 用于常量和枚举值 (特别是当枚举值为数字时)。
+
+## 6. 函数与方法 (Functions & Methods)
+- **箭头函数**: 在回调函数和类方法中，优先使用箭头函数以保持词法作用域的 `this` 绑定。
+- **函数重载 (Function Overloads)**: 当函数根据不同的参数类型或数量有多种调用签名时，使用函数重载来提供更精确的类型定义。
+- (错误处理参见下面的 "错误处理" 章节)
+
+## 7. 面向对象编程 (OOP)
+- 合理使用类、继承、接口实现等面向对象特性。
+- 遵循 SOLID 原则。
+
+## 8. 空值处理 (Null & Undefined Handling)
+- **`strictNullChecks`**: 必须启用此编译选项。
+- **显式处理**: 显式处理可能为 `null` 或 `undefined` 的情况。
+- **安全导航操作符**: 使用可选链 (`?.`) 和空值合并运算符 (`??`) 安全地访问和处理可能为空的值。
+
+## 9. 异步编程 (Async Programming)
+- **`async/await`**: 优先使用 `async/await` 处理异步操作，使其更易读和管理。
+- **Promise 错误处理**: 所有 Promise 的错误都需要被捕获和妥善处理 (e.g., `try/catch` with `async/await` or `.catch()` for promises)。
+
+## 10. 错误处理 (Error Handling)
+- **自定义错误类型**: 为领域特定的错误创建继承自 `Error` 的自定义错误类型，以便更精确地捕获和处理。
+- **类型化 Catch**: 在 `try...catch` 语句中，如果可能，对捕获的错误对象进行类型检查或使用类型断言（谨慎）。(注: TypeScript 4.4+ 支持在 catch 子句中声明 `unknown` 类型，推荐使用并进行类型守卫)。
+- **Promise 拒绝**: 确保所有 Promise 拒绝都被处理，避免未捕获的 Promise 拒绝错误。
+- **Result 类型模式 (可选)**: 对于可能失败的操作，可以考虑使用 Result 类型 (或 Either 类型) 模式，以函数式的方式显式处理成功和失败路径，但这可能引入额外复杂性或库依赖，团队应讨论决定。
+- **错误边界 (Error Boundaries)**: 在 React 等 UI 框架中，使用错误边界组件来捕获和处理渲染阶段的错误。
+
+## 11. 设计模式参考 (Design Patterns Reference)
+- 以下设计模式在 TypeScript 项目中可能有用，可根据场景酌情考虑：
+  - **创建型**: 构建者模式 (Builder), 工厂模式 (Factory)
+  - **结构型**: (暂无特别强调，通用模式适用)
+  - **行为型**: (暂无特别强调，通用模式适用)
+  - **其他架构模式**: 仓储模式 (Repository) 用于数据访问抽象，模块模式 (Module) 利用 ES 模块实现封装。
+- **依赖注入 (Dependency Injection)**: 可以用于解耦组件和服务。
+
+## 12. React/Next.js 特定 (React/Next.js Specifics)
+- 组件和 props 的类型定义、Hooks 使用规范等，详见框架特定的规则文档。
+
+
+

@@ -1,0 +1,91 @@
+---
+description: 
+globs: **/*.js,**/*.tsx,**/*.css,**/*.jsx,**/*.ts
+alwaysApply: false
+---
+# 前端结构与开发规范 (Frontend Structure & Development)
+
+## 1. 技术栈 (Technology Stack)
+- **核心框架**: React (通过 Next.js 实现)
+- **UI 框架/库**: Tailwind CSS
+- **包管理**: npm (或 Yarn, 根据项目初始化确定)
+- **代码质量**:
+    - **Linting**: ESLint
+    - **Formatting**: Prettier
+
+## 2. 项目结构 (Project Structure - Next.js App Router 示例)
+```
+.
+├── app/                     # Next.js App Router 核心目录
+│   ├── layout.tsx           # 根布局
+│   ├── page.tsx             # 首页
+│   ├── globals.css          # 全局样式 (Tailwind 指令)
+│   ├── components/          # 应用级共享组件
+│   │   └── ui/              # UI 基础组件 (例如按钮, 输入框等)
+│   ├── (features)/          # 按功能模块组织的路由和组件 (可选)
+│   │   └── transcript/      # 示例：笔录处理功能
+│   │       ├── page.tsx
+│   │       └── components/
+│   └── api/                 # Next.js API Routes (如果前端需要简单的后端代理或服务)
+├── public/                  # 静态资源
+├── styles/                  # 全局样式或主题 (如果需要)
+├── hooks/                   # 自定义 React Hooks
+├── utils/                   # 通用工具函数
+├── lib/                     # 客户端库、服务等
+├── tests/                   # 测试代码
+│   └── frontend/
+├── next.config.js           # Next.js 配置文件
+├── tailwind.config.js       # Tailwind CSS 配置文件
+├── postcss.config.js        # PostCSS 配置文件
+├── tsconfig.json            # TypeScript 配置文件
+├── package.json
+└── README.md
+```
+- **模块化与组件化**: 
+    - 优先使用 React Server Components (RSC) 和 Client Components (RCC) 进行合理划分。
+    - 将 UI 拆分为可复用的组件，存放在 `components/` 目录下。
+    - 复杂页面或功能可以进一步组织到 `app/(features)/` 类似的目录结构中。
+- **遵循 `README.md` 中描述的 MVP 页面布局和功能区划分。**
+
+## 3. Next.js (App Router) 最佳实践
+- **Server Components 优先**: 尽可能使用 Server Components 来获取数据和执行服务端逻辑，以提升性能。
+- **Client Components**: 仅在需要交互性 (事件处理、状态管理) 或浏览器 API 时使用 `'use client'`。
+- **路由 (Routing)**: 使用 App Router 的基于文件系统的路由。
+- **布局 (Layouts)**: 使用 `layout.tsx` 来创建共享的 UI 结构。
+- **数据获取 (Data Fetching)**: 在 Server Components 中使用 `async/await`，或结合 React Suspense 和 Server Actions。
+- **状态管理**: 
+    - 对于简单组件内部状态，使用 `useState` 和 `useReducer`。
+    - 对于跨组件的全局状态，可考虑使用 React Context API 或轻量级状态管理库 (如 Zustand, Jotai)，避免 MVP 阶段引入 Redux 等较重方案。
+
+## 4. Tailwind CSS 使用
+- **功能类优先**: 遵循 Tailwind CSS 的功能类优先原则。
+- **配置文件**: 通过 `tailwind.config.js` 进行主题定制和插件配置。
+- **响应式设计**: 使用 `sm:`, `md:`, `lg:` 等前缀实现响应式布局。
+- **组件封装**: 对于常用的样式组合，可以封装为 React 组件，并在组件内部应用 Tailwind 类。
+- **参考 `3.frameworks/tailwind.mdc` 规则。**
+
+## 5. 代码质量
+- **TypeScript**: 严格使用 TypeScript，充分利用类型系统。
+- **ESLint/Prettier**: 配置并使用 ESLint 和 Prettier 进行代码检查和格式化。
+- **遵循 `1.common/general` 和 `2.languages/typescript.mdc` 中的通用编码实践。**
+
+## 6. 组件实现策略 (来自 README.md)
+- 在实现UI元素时，应首先在 `21st-dev/magic` 组件库（如果其组件与 React/Next.js 兼容）或类似的基于 React/Tailwind CSS 的组件库（如 Shadcn UI 风格的组件）中查找可直接使用或适配的成熟组件。若无完全合适的组件，或现有组件对于 MVP 阶段过于复杂，则基于 Tailwind CSS 构建满足 MVP 需求的、功能简约的界面元素。
+
+## 7. 任务拆解参考 (来自 README.md)
+- **任务 2.1：项目初始化与基本布局**
+    - 使用 `create-next-app` 初始化 Next.js 前端项目，并集成 Tailwind CSS。
+    - 实现 MVP 设计稿中的单页面三栏固定布局。
+- **任务 2.2："上传文件"与"原始笔录"区域**
+    - 实现文件上传和原始笔录显示。
+- **任务 2.3："规则配置区"界面**
+    - 实现规则配置区的静态界面元素。
+- **任务 2.4："转换后笔录"与"下载"区域界面**
+    - 实现转换后笔录和下载按钮的静态界面。
+- **任务 3.1：动态生成"被访者"选项**
+- **任务 3.2：实现"应用规则"功能**
+- **任务 3.3：实现"重置规则"功能**
+- **任务 3.4：实现"下载转换后笔录"功能**
+
+
+

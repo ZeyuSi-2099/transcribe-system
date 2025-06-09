@@ -1,0 +1,104 @@
+---
+description: 
+globs: **/*.js,**/*.jsx,**/*.ts,**/*.tsx
+alwaysApply: false
+---
+# Next.js Framework Rules (Next.js 框架规则)
+
+## 1. 项目设置与技术栈 (Project Setup & Stack)
+- **初始化**: 项目使用 `create-next-app` 初始化。
+- **包管理器**: 根据项目初始化选择使用 `npm` 或 `Yarn`，并保持一致。
+- **核心框架**: **Next.js** (基于 **React**)，优先采用 **App Router** 结构。
+- **样式方案**: **Tailwind CSS**。
+  - 遵循 Tailwind CSS 的最佳实践进行样式开发。
+  - 优先使用 Tailwind CSS 的功能类 (utility classes)。
+- **TypeScript**: (如果项目中已集成或计划集成)
+  - 遵循 `@2.languages/typescript.mdc` 中的 TypeScript 编码规范。
+  - 为组件 Props、Hooks、API 路由 (Route Handlers) 等定义明确的类型。
+
+## 2. 代码风格、组织与质量 (Code Style, Organization & Quality)
+- **命名约定**:
+  - 目录名使用 `kebab-case` (例如 `components/auth-form`)。
+  - 组件、页面 (Server/Client Components) 文件名使用 `PascalCase` (例如 `AuthForm.tsx`, `page.tsx`)。
+  - 其他 TypeScript/JavaScript 命名约定遵循 `@2.languages/typescript.mdc`。
+- **模块导入/导出**: 
+  - 优先使用命名导出 (`export function MyComponent() {}`) 而非默认导出。
+- **ESLint**: 用于代码规范检查和潜在错误识别。
+  - 配置应与 Next.js (App Router) 和 TypeScript (如果使用) 良好集成。
+  - 遵循 ESLint 报告的规则，解决所有警告和错误。
+- **Prettier**: 用于代码自动格式化，确保代码风格统一。
+  - Prettier 配置应与 ESLint 兼容 (e.g., using `eslint-config-prettier`)。
+- 遵循 `@1.common/general.mdc` 中的通用编码实践。
+
+## 3. React Server Components (RSC) 与客户端组件 (Client Components)
+- **默认服务端**: 组件默认为 React Server Components (RSC)。
+- **客户端组件标记**: 客户端组件必须在文件顶部明确标记 `'use client'`。
+- **最小化客户端组件**: 
+  - 保持大多数组件为 RSC，以利用服务端渲染的优势。
+  - 仅在组件需要交互性 (事件监听器、状态 `useState`、生命周期效应 `useEffect`、浏览器API访问) 时使用客户端组件。
+  - **策略**: 将客户端交互逻辑下沉到尽可能小的叶子组件中。如果一个大部分静态的组件中只有一小部分需要交互，考虑将其拆分为一个小型客户端组件包装器，父组件仍为 RSC。
+- **Suspense**: 对于可能需要较长时间加载的客户端组件或其依赖的数据，应使用 `<Suspense>` 组件并提供 `fallback` UI，以改善用户体验。
+
+## 4. 组件开发 (Component Development)
+- **函数组件与 Hooks**: 继续优先使用函数组件和 Hooks (在客户端组件中)。
+- **组件 Props**: 
+  - Props 定义应清晰、简洁，并使用 TypeScript (如果适用) 进行类型化。
+  - 对于 React 组件的 Props 接口，推荐遵循 `@2.languages/typescript.mdc` 中的命名约定 (如 `PascalCase` 并以 `Props` 为后缀，例如 `ButtonProps`)。
+- **组件库使用策略** (参照 `README.md`):
+  - **优先选用成熟组件**: 在实现UI元素时，首先在与 React/Next.js 兼容的成熟组件库 (如 Shadcn UI 风格的组件，或团队约定的其他库) 中查找可直接使用或适配的组件。
+  - **自定义组件**: 若无完全合适的第三方组件，或现有组件对于 MVP 阶段过于复杂，则基于 Tailwind CSS 构建满足需求的、功能简约的自定义界面元素。
+
+## 5. 页面与路由 (Pages & Routing - App Router)
+- **App Router 结构**: 项目采用 Next.js App Router 进行路由管理。
+  - 路由在 `app` 目录下定义，每个路由段对应一个文件夹。
+  - 页面 UI 在该路由段文件夹下的 `page.tsx` (或 `.js`, `.jsx`) 文件中定义。
+- **动态路由**: 根据需要使用 App Router 的动态段 (dynamic segments) 功能。
+- **Route Handlers (API 路由)**: 
+  - 服务端 API 逻辑通过在 `app` 目录下的路由段中创建 `route.ts` (或 `.js`) 文件来实现 (Route Handlers)。
+  - 这些处理器用于处理 HTTP 请求并返回响应，替代了 `pages/api` 的功能。
+  - 后端 API 交互可以直接调用独立的 FastAPI 后端服务，或通过 Route Handlers 代理/处理简单请求。
+
+## 6. 数据获取与状态管理 (Data Fetching & State Management)
+- **服务器组件数据获取**: 
+  - 优先在 React Server Components 中直接使用 `async/await` 进行数据获取。这允许数据在服务端获取，减少客户端负担。
+- **客户端数据获取**: 
+  - 对于客户端组件中需要在客户端触发的数据获取（如用户交互后），可使用 `fetch` API、`axios`，或考虑 `SWR`/`React Query` (如果引入)。
+  - 处理 API 请求的加载状态 (loading)、成功状态 (success) 和错误状态 (error)。
+- **状态管理优化**: 
+  - **避免不必要的 `useState` 和 `useEffect`**: 许多原先需要客户端状态和副作用的场景，现在可以通过 RSC 和 Server Actions 解决。
+  - **React Server Actions**: 用于处理表单提交和数据变更等操作，可以在服务端执行，并与客户端组件平滑集成。
+  - **URL 搜索参数**: 对于可共享的、应反映在 URL 中的状态 (如筛选器、分页)，优先使用 URL 搜索参数管理。
+    - 考虑使用 `nuqs` 等库简化 URL 搜索参数状态的管理。
+  - **局部状态**: 对于客户端组件内部的简单局部状态，继续使用 `useState` 和 `useReducer`。
+- **文件处理** (参照 `README.md`):
+  - 实现 `.txt` 文件上传功能 (可能涉及 Server Actions 或 Route Handlers)。
+  - 实现将文本内容下载为 `.txt` 文件的功能 (客户端逻辑)。
+
+## 7. MVP 特定关注点 (MVP Specifics - 参照 `README.md`)
+- **单页面应用 (SPA) 风格**: MVP 版本为单页面布局，所有核心功能在同一页面呈现 (通过 App Router 的单个主要 `page.tsx` 实现)。
+- **固定布局**: 实现三栏固定布局，内容溢出时在特定区域内部滚动。
+- **用户交互**: 
+  - 文件上传控件。
+  - 文本展示区 (保持原始换行，内部滚动)。
+  - 规则配置区 (开关、单选按钮、操作按钮)。
+  - 转换后文本展示区 (内部滚动)。
+  - 下载按钮。
+- **动态内容**: 实现基于用户操作和后端数据的动态内容更新 (如动态生成"被访者"选项，刷新转换后笔录)。
+
+## 8. 错误处理 (Error Handling)
+- 实现基本的前端错误处理，如 API 请求失败、文件上传失败等，并向用户提供清晰的提示。
+- **错误边界 (Error Boundaries)**: 在客户端组件中使用错误边界来捕获和处理组件渲染过程中的错误。
+- App Router 提供了 `error.tsx` 文件约定来处理特定路由段的错误。
+
+## 9. 测试 (Testing)
+- (MVP 阶段可能侧重端到端测试和手动测试，未来可补充单元测试和集成测试规则，特别是针对 Server Components, Client Components 和 Server Actions 的测试策略)。
+- 测试应覆盖核心交互流程和用户场景。
+
+## 10. 部署 (Deployment)
+- (部署方案待定，确定后补充相关规则，如 Vercel 平台部署的最佳实践等)。
+
+## 11. 性能优化 (Performance)
+- (MVP 阶段可能关注点较少，未来可补充 Next.js App Router 相关的性能优化策略，如 Streaming, Server Components 的合理使用，代码分割等)。
+
+
+

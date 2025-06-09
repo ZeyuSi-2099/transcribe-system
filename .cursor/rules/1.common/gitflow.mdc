@@ -1,0 +1,108 @@
+---
+description: 当执行Git操作时，需遵循的工作流程
+globs: 
+alwaysApply: false
+---
+# Git Flow Workflow Rules (Git Flow 工作流规则)
+
+## 1. 主要分支 (Main Branches)
+
+### `main` (或 `master`)
+- 包含生产就绪代码。
+- 用于存放正式发布的版本，代码应该是稳定且可部署的。
+- **永远不要直接提交到 `main` 分支。**
+- 只接受来自以下分支的合并：
+  - `hotfix/*` 分支
+  - `release/*` 分支
+- **每次合并后必须使用版本号进行标记 (Tagging)。**
+
+### `develop`
+- 主开发分支，汇集了所有已完成的特性和修复。
+- 包含最新交付的开发变更，是新特性开发的起点。
+- **永远不要直接提交到 `develop` 分支。**
+
+## 2. 支持分支 (Supporting Branches)
+
+### 特性分支 (Feature Branches) `feature/*`
+- **从哪里创建**: `develop` 分支。
+- **合并回**: `develop` 分支。
+- **命名约定**: `feature/<feature-name>` 或 `feature/<issue-id>-<descriptive-name>`
+- **示例**: `feature/user-profile`, `feature/123-user-authentication`
+- **关键行为**:
+    - 用于开发新功能。
+    - 创建 Pull Request 前，必须与 `develop` 分支保持同步（通过变基 rebase 或 合并 merge）。
+    - **合并后应删除该特性分支。**
+
+### 发布分支 (Release Branches) `release/*`
+- **从哪里创建**: `develop` 分支 (当 `develop` 分支达到一个稳定状态并准备发布新版本时)。
+- **合并回**:
+  - `main` (打上版本标签)
+  - `develop` (以确保 `develop` 也包含这些修复)
+- **命名约定**: `release/vX.Y.Z`
+- **示例**: `release/v1.0.0`
+- **关键行为**:
+    - 用于版本发布的最后准备工作，如小的 bug 修复、文档生成、版本号更新等。
+    - **不允许添加新的主要功能。**
+    - **合并后应删除该发布分支。**
+
+### 修复分支 (Hotfix Branches) `hotfix/*`
+- **从哪里创建**: `main` 分支 (某个特定的版本标签)。
+- **合并回**:
+  - `main` (更新版本标签)
+  - `develop` (以确保开发也包含此修复)
+- **命名约定**: `hotfix/vX.Y.Z` 或 `hotfix/<issue-id>-<descriptive-name>`
+- **示例**: `hotfix/v1.0.1`, `hotfix/456-critical-payment-bug`
+- **关键行为**:
+    - **仅用于紧急生产环境修复。**
+    - **合并后应删除该修复分支。**
+
+## 3. 工作流程概要 (Workflow Overview)
+1.  从 `develop` 分支创建特性分支进行新功能开发。
+2.  特性开发完成后，与 `develop` 同步，然后创建 Pull Request 合并回 `develop` 分支。
+3.  当 `develop` 分支准备好发布时，创建 `release` 分支。
+4.  在 `release` 分支上进行测试、版本号更新和最后的 bug 修复。
+5.  `release` 分支稳定后，创建 Pull Request 合并到 `main` 并打上版本标签，然后合并回 `develop`。
+6.  如果线上版本 (`main`) 出现紧急 bug，从 `main` 创建 `hotfix` 分支修复，然后创建 Pull Request 合并回 `main` 和 `develop`。
+
+## 4. Pull Request 规则 (Pull Request Rules)
+- 所有对 `develop` 和 `main` 分支的合并都必须通过 Pull Request (PR) 进行。
+- PR 应有清晰的标题和描述，说明变更内容、目的及相关 Issue (如果适用)。
+- **所需批准**: 至少需要一名团队成员的审查批准 (Code Review)。
+- **CI 检查**: 相关的持续集成 (CI) 检查必须通过。
+- **分支同步**: 合并前，源分支必须与目标分支的最新状态保持同步。
+- **分支清理**: PR 合并后，其源特性分支/修复分支应被删除。
+- **禁止直接提交**: 不允许直接提交到受保护分支 (`main`, `develop`)。
+
+## 5. 分支保护规则 (Branch Protection Rules)
+对 `main` 和 `develop` 分支应设置为受保护分支，并应用以下规则：
+- **要求 Pull Request 审核**: 所有合并必须通过 Pull Request。
+- **要求状态检查通过**: 所有相关的 CI 构建和测试必须通过。
+- **要求分支保持最新**: 合并前，PR 的源分支必须与目标分支的最新代码同步。
+- **限制规则包括管理员**: 保护规则对仓库管理员同样适用。
+- **禁止强制推送 (Force Push)**: 禁止对受保护分支进行强制推送。
+- **禁止删除**: 禁止删除受保护分支。
+
+## 6. 发布流程 (Release Process)
+1.  **创建 Release 分支**: 从 `develop` 分支创建 `release/vX.Y.Z` 分支。
+2.  **准备发布**: 在 `release` 分支上：
+    -   更新版本号 (例如在 `package.json`, `CHANGELOG.md` 等文件中)。
+    -   进行最后的测试和 bug 修复。
+    -   更新文档（如 `CHANGELOG.md`）。
+3.  **创建 PR 到 `main`**: 当 `release` 分支稳定后，创建一个 Pull Request 将其合并到 `main` 分支。
+4.  **合并到 `main` 与后续操作**: PR 审核通过并合并到 `main` 后：
+    -   **标记发布**: 在 `main` 分支上为此次提交打上版本标签 (e.g., `git tag -a vX.Y.Z -m "Release version X.Y.Z"`) 并推送到远程。
+    -   **合并回 `develop`**: 将 `release` 分支（或 `main` 分支的最新提交）合并回 `develop` 分支。
+    -   **删除 Release 分支**: 删除本地和远程的 `release/vX.Y.Z` 分支。
+
+## 7. 热修复流程 (Hotfix Process)
+1.  **创建 Hotfix 分支**: 当生产环境 (`main` 分支) 出现紧急 bug 时，从对应的 `main` 分支标签 (或最新 `main`) 创建 `hotfix/*` 分支。
+2.  **修复 Bug**: 在 `hotfix` 分支上进行必要的代码修改以修复 bug。
+3.  **更新版本号**: 更新 PATCH 版本号 (例如在 `package.json`, `CHANGELOG.md` 等文件中)。
+4.  **创建 PR 到 `main`**: 修复完成后，创建一个 Pull Request 将 `hotfix` 分支合并到 `main` 分支。
+5.  **合并到 `main` 与后续操作**: PR 审核通过并合并到 `main` 后：
+    -   **标记发布**: 在 `main` 分支上为此次提交打上新的版本标签 (e.g., `git tag -a vX.Y.Z+1 -m "Hotfix version X.Y.Z+1"`) 并推送到远程。
+    -   **合并回 `develop`**: 将 `hotfix` 分支（或 `main` 分支的最新提交）合并回 `develop` 分支。
+    -   **删除 Hotfix 分支**: 删除本地和远程的 `hotfix` 分支。
+
+
+
