@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -70,7 +70,7 @@ interface RuleSet {
   createdAt: string
 }
 
-export default function RulesPage() {
+function RulesPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [selectedRuleSetId, setSelectedRuleSetId] = useState<string>('default')
@@ -936,5 +936,26 @@ export default function RulesPage() {
         </div>
     </div>
     </TooltipProvider>
+  )
+}
+
+// 创建加载组件
+function RulesPageLoading() {
+  return (
+    <div className="flex h-screen items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
+        <p className="text-gray-600">加载规则配置...</p>
+      </div>
+    </div>
+  )
+}
+
+// 默认导出使用 Suspense 包装
+export default function RulesPage() {
+  return (
+    <Suspense fallback={<RulesPageLoading />}>
+      <RulesPageContent />
+    </Suspense>
   )
 } 
