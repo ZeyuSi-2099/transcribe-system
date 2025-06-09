@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
+import { useAuth } from "@/contexts/AuthContext"
 import { 
   Plus, 
   History, 
@@ -17,7 +18,9 @@ import {
   ChevronRight,
   Clock,
   Wand2,
-  Home
+  Home,
+  User,
+  LogOut
 } from 'lucide-react'
 import { cn } from "@/lib/utils"
 
@@ -82,6 +85,7 @@ const staggerVariants = {
 export default function Sidebar() {
   const router = useRouter()
   const pathname = usePathname()
+  const { user, signOut } = useAuth()
   const [isCollapsed, setIsCollapsed] = useState(true)
   const [isHistoryExpanded, setIsHistoryExpanded] = useState(true)
   const [isRulesExpanded, setIsRulesExpanded] = useState(true)
@@ -312,6 +316,39 @@ export default function Sidebar() {
                 </ScrollArea>
               </div>
             </div>
+          </div>
+
+          {/* 用户信息区域 */}
+          <div className="border-t bg-gray-50/50 p-2">
+            {user && (
+              <motion.div variants={variants}>
+                <div className="flex items-center gap-2 px-2 py-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                    <User className="h-4 w-4" />
+                  </div>
+                  {!isCollapsed && (
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">
+                        {user.user_metadata?.full_name || '用户'}
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {user.email}
+                      </p>
+                    </div>
+                  )}
+                  {!isCollapsed && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => signOut()}
+                      className="h-8 w-8 p-0 hover:bg-red-100 hover:text-red-600"
+                    >
+                      <LogOut className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              </motion.div>
+            )}
           </div>
         </motion.ul>
       </motion.div>

@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils"
 import FileUploadZone from "@/components/FileUploadZone"
 import { useRouter, useSearchParams } from "next/navigation"
 import Sidebar from '@/components/Sidebar'
+import ProtectedRoute from '@/components/auth/ProtectedRoute'
 
 interface TranscriptionConverterProps {
   className?: string
@@ -548,8 +549,10 @@ function PageLoading() {
 
 export default function Dashboard() {
   return (
-    <Suspense fallback={<PageLoading />}>
-      <TranscriptionConverter />
-    </Suspense>
+    <ProtectedRoute>
+      <Suspense fallback={<PageLoading />}>
+        <TranscriptionConverter />
+      </Suspense>
+    </ProtectedRoute>
   )
 } 

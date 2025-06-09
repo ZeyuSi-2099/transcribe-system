@@ -252,7 +252,7 @@ export default function LandingPage() {
             体验AI驱动的智能转换，提升您的工作效率
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/dashboard">
+            <Link href="/auth/login">
               <Button size="lg" variant="secondary" className="w-full sm:w-auto">
                 免费开始使用
                 <ArrowRight className="ml-2 h-4 w-4" />
