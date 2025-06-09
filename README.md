@@ -265,7 +265,8 @@ Week 15-16  │ 阶段五：部署运维
 - **[🏗️ 技术架构](README_architecture.md)** - 详细技术栈、架构设计、安全策略
 - **[👤 用户指南](README_user_guide.md)** - 完整用户流程、界面设计、功能说明
 - **[💻 开发指南](README_development.md)** - 项目结构、开发环境、代码规范、测试策略
-- **[🚀 部署指南](README_deployment.md)** - Docker部署、云服务部署、监控配置
+- **[🚀 部署指南](README_deployment.md)** - 生产部署配置、云服务部署、监控配置
+- **[🔄 工作流程](README_workflow.md)** - 日常开发流程、提交规范、自动部署流程
 
 ---
 

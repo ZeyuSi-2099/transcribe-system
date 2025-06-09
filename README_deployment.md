@@ -1,5 +1,43 @@
 # 部署指南
 
+## ✅ 生产环境成功部署信息
+
+### 🌐 当前生产环境配置
+- **前端部署平台**: Vercel
+- **后端部署平台**: Render
+- **数据库**: Supabase Cloud
+- **域名**: transcribe.solutions
+- **LLM服务**: Deepseek API
+
+### 🔗 生产环境链接
+- **主域名**: https://www.transcribe.solutions
+- **前端仓库**: https://github.com/ZeyuSi-2099/transcribe-system (deploy-main 分支)
+- **后端API**: https://transcribe-system.onrender.com
+- **数据库**: https://ghbtjyetllhcdddhjygi.supabase.co
+
+### ⚙️ 关键配置文件
+1. **Vercel配置** (`frontend/vercel.json`):
+```json
+{
+  "framework": "nextjs",
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "installCommand": "npm install"
+}
+```
+
+2. **环境变量配置**:
+   - Vercel: `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - Render: `SUPABASE_URL`, `SUPABASE_KEY`, `DEEPSEEK_API_KEY`
+
+3. **部署分支**: `deploy-main`
+
+### 🚀 部署成功关键步骤
+1. **解决Root Directory配置**: 在Vercel中设置Root Directory为`frontend`
+2. **删除冲突配置文件**: 移除项目根目录的vercel.json和next.config.ts
+3. **添加框架识别配置**: 在frontend目录下创建vercel.json明确指定Next.js框架
+4. **环境变量配置**: 正确配置所有必要的环境变量
+
 ## 🚀 部署架构概览
 
 ### 生产环境推荐架构 (Supabase 集成)
