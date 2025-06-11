@@ -123,11 +123,9 @@ function TranscriptionConverter({ className }: TranscriptionConverterProps) {
     maxHeight: 300,
   })
 
-  // 模拟规则集数据
+  // 更新规则集数据 - 只保留一个官方规则集
   const [availableRuleSets] = useState<RuleSet[]>([
-    { id: 'default', name: '通用规则集', description: '适用于大多数笔录转换场景', isDefault: true, enabledRulesCount: 8 },
-    { id: 'meeting', name: '会议专用规则', description: '针对会议记录优化的规则集', isDefault: false, enabledRulesCount: 6 },
-    { id: 'interview', name: '访谈优化规则', description: '专门用于访谈笔录的规则集', isDefault: false, enabledRulesCount: 7 },
+    { id: 'default', name: '官方-通用规则集', description: '适用于大多数笔录转换场景', isDefault: false, enabledRulesCount: 8 }
   ])
 
   const selectedRuleSet = availableRuleSets.find(rs => rs.id === selectedRuleSetId)
@@ -147,7 +145,7 @@ function TranscriptionConverter({ className }: TranscriptionConverterProps) {
       // 构建规则配置
       const ruleConfig = {
         ruleSetId: selectedRuleSetId,
-        ruleSetName: selectedRuleSet?.name || '通用规则集',
+        ruleSetName: selectedRuleSet?.name || '官方-通用规则集',
         enabledRules: [] // 这里应该根据选中的规则集获取启用的规则
       }
 
@@ -254,21 +252,22 @@ function TranscriptionConverter({ className }: TranscriptionConverterProps) {
       {/* 主内容区域 */}
       <div className="flex-1 overflow-hidden ml-14">
         <div className={cn("h-full p-6 overflow-y-auto", className)}>
-          <div className="w-full max-w-6xl mx-auto">
+          <div className="w-full max-w-7xl mx-auto">
             <div className="flex flex-col space-y-6">
-              <div className="space-y-2">
+              {/* 页面标题和描述 */}
+              <div className="space-y-3">
                 <h1 className="text-3xl font-bold text-foreground">笔录转换工具</h1>
-                <p className="text-muted-foreground">支持文本输入和文件上传两种方式，自动转换对话式笔录为叙述式笔录</p>
+                <p className="text-muted-foreground">当前为内测版本，支持通用转换规则与自定义转换规则</p>
               </div>
 
-              {/* 规则选择区域 */}
-              <Card className="border-blue-200 bg-blue-50">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg flex items-center gap-2">
+              {/* 规则配置区域 - 深色样式 */}
+              <Card className="border-gray-800 bg-gray-900 text-white">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-lg flex items-center gap-2 text-white">
                     <Settings className="h-5 w-5" />
                     规则配置
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription className="text-gray-300">
                     选择适合的规则集来优化转换效果
                   </CardDescription>
                 </CardHeader>
@@ -276,86 +275,99 @@ function TranscriptionConverter({ className }: TranscriptionConverterProps) {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4 flex-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium">规则集：</span>
+                        <span className="text-sm font-medium text-white">规则集：</span>
                         <Select value={selectedRuleSetId} onValueChange={setSelectedRuleSetId}>
-                          <SelectTrigger className="w-64">
+                          <SelectTrigger className="w-64 bg-gray-800 border-gray-700 text-white">
                             <SelectValue />
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent className="bg-gray-800 border-gray-700">
                             {availableRuleSets.map(ruleSet => (
-                              <SelectItem key={ruleSet.id} value={ruleSet.id}>
-                                <div className="flex items-center gap-2">
-                                  <span>{ruleSet.name}</span>
-                                  {ruleSet.isDefault && (
-                                    <Badge variant="secondary" className="text-xs">默认</Badge>
-                                  )}
-                                </div>
+                              <SelectItem key={ruleSet.id} value={ruleSet.id} className="text-white hover:bg-gray-700">
+                                <span>{ruleSet.name}</span>
                               </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
                       </div>
                       {selectedRuleSet && (
-                        <div className="text-sm text-gray-600">
+                        <div className="text-sm text-gray-300">
                           <span>{selectedRuleSet.description}</span>
                           <span className="ml-2">• 已启用 {selectedRuleSet.enabledRulesCount} 个规则</span>
                         </div>
                       )}
                     </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => router.push(`/rules?set=${selectedRuleSetId}`)}
-                      className="gap-2"
-                    >
-                      <Settings className="h-4 w-4" />
-                      配置规则
-                    </Button>
                   </div>
                 </CardContent>
               </Card>
 
-              <Tabs defaultValue="text" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="text" className="flex items-center gap-2">
-                    <FileText className="h-4 w-4" />
-                    文本输入
-                  </TabsTrigger>
-                  <TabsTrigger value="upload" className="flex items-center gap-2">
-                    <Upload className="h-4 w-4" />
-                    文件上传
-                  </TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="text" className="space-y-6">
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-medium">原始笔录</h3>
-                        {inputText && (
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={handleClearInput}
-                          >
-                            清空
-                          </Button>
-                        )}
-                      </div>
-                      <div className="relative border border-input bg-background rounded-lg focus-within:ring-1 focus-within:ring-ring">
-                        <Textarea
-                          ref={inputRef}
-                          value={inputText}
-                          onChange={handleInputChange}
-                          placeholder="请在此处粘贴或输入原始笔录内容..."
-                          className="min-h-[300px] resize-none border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
-                        />
-                      </div>
-                    </div>
+              {/* 主要工作区 - 左右两列布局 */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* 左侧：输入区域 */}
+                <div className="space-y-6">
+                  <Tabs defaultValue="text" className="w-full">
+                    <TabsList className="grid w-full grid-cols-2">
+                      <TabsTrigger value="text" className="flex items-center gap-2">
+                        <FileText className="h-4 w-4" />
+                        文本输入
+                      </TabsTrigger>
+                      <TabsTrigger value="upload" className="flex items-center gap-2">
+                        <Upload className="h-4 w-4" />
+                        文件上传
+                      </TabsTrigger>
+                    </TabsList>
+                    
+                    <TabsContent value="text" className="space-y-4 mt-4">
+                      <Card>
+                        <CardHeader className="pb-4">
+                          <div className="flex items-center justify-between">
+                            <CardTitle className="text-lg">原始笔录</CardTitle>
+                            {inputText && (
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={handleClearInput}
+                              >
+                                清空
+                              </Button>
+                            )}
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="relative border border-input bg-background rounded-lg focus-within:ring-1 focus-within:ring-ring">
+                            <Textarea
+                              ref={inputRef}
+                              value={inputText}
+                              onChange={handleInputChange}
+                              placeholder="请在此处粘贴或输入原始笔录内容..."
+                              className="min-h-[350px] resize-none border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                            />
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </TabsContent>
+                    
+                    <TabsContent value="upload" className="space-y-4 mt-4">
+                      <Card>
+                        <CardHeader className="pb-4">
+                          <CardTitle className="text-lg">文件上传</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <FileUploadZone 
+                            onUploadSuccess={handleFileUploadSuccess}
+                            onUploadError={(error) => console.error('Upload error:', error)}
+                          />
+                        </CardContent>
+                      </Card>
+                    </TabsContent>
+                  </Tabs>
+                </div>
 
-                    <div className="space-y-2">
+                {/* 右侧：转换结果 */}
+                <div className="space-y-4">
+                  <Card>
+                    <CardHeader className="pb-4">
                       <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-medium">转换结果</h3>
+                        <CardTitle className="text-lg">转换结果</CardTitle>
                         {conversionResult && (
                           <Button 
                             variant="ghost" 
@@ -366,46 +378,43 @@ function TranscriptionConverter({ className }: TranscriptionConverterProps) {
                           </Button>
                         )}
                       </div>
+                    </CardHeader>
+                    <CardContent>
                       <div className="relative border border-input bg-background rounded-lg">
                         <Textarea
                           ref={outputRef}
                           value={conversionResult?.converted_text || ''}
                           readOnly
                           placeholder="转换后的内容将显示在这里..."
-                          className="min-h-[300px] resize-none border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                          className="min-h-[350px] resize-none border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
                         />
                       </div>
-                    </div>
-                  </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
 
-                  <div className="flex justify-center gap-4">
-                    <Button
-                      onClick={handleConvert}
-                      disabled={!inputText.trim() || isConverting}
-                      className="gap-2"
-                    >
-                      {isConverting ? (
-                        <>
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          转换中...
-                        </>
-                      ) : (
-                        <>
-                          <Wand2 className="size-4" />
-                          开始转换
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="upload" className="space-y-6">
-                  <FileUploadZone 
-                    onUploadSuccess={handleFileUploadSuccess}
-                    onUploadError={(error) => console.error('Upload error:', error)}
-                  />
-                </TabsContent>
-              </Tabs>
+              {/* 转换按钮 */}
+              <div className="flex justify-center py-4">
+                <Button
+                  onClick={handleConvert}
+                  disabled={!inputText.trim() || isConverting}
+                  size="lg"
+                  className="gap-2 px-8"
+                >
+                  {isConverting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      转换中...
+                    </>
+                  ) : (
+                    <>
+                      <Wand2 className="size-4" />
+                      开始转换
+                    </>
+                  )}
+                </Button>
+              </div>
 
               {/* 转换结果详情 */}
               {conversionResult && (
@@ -451,77 +460,38 @@ function TranscriptionConverter({ className }: TranscriptionConverterProps) {
                     </div>
 
                     {/* 质量指标详情 */}
-                    {conversionResult.quality_metrics && (
-                      <div className="space-y-3">
-                        <h4 className="text-sm font-medium flex items-center gap-2">
-                          <BarChart3 className="h-4 w-4" />
-                          质量指标
-                        </h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                    {conversionResult.quality_metrics && Object.keys(conversionResult.quality_metrics).length > 1 && (
+                      <div className="space-y-2">
+                        <h4 className="font-medium">详细指标</h4>
+                        <div className="grid grid-cols-2 gap-2 text-sm">
                           {Object.entries(conversionResult.quality_metrics).map(([key, value]) => {
                             if (key === 'overall_score') return null
-                                  
-                                  // 处理嵌套对象
-                                  const formatValue = (val: any): string => {
-                                    if (typeof val === 'number') {
-                                      return `${val.toFixed(2)}${key.includes('score') || key.includes('rate') ? '%' : ''}`
-                                    } else if (typeof val === 'object' && val !== null) {
-                                      // 如果是对象，显示其主要属性
-                                      if (val.score !== undefined) return `${val.score.toFixed(2)}%`
-                                      if (val.rate !== undefined) return `${(val.rate * 100).toFixed(2)}%`
-                                      if (val.count !== undefined) return `${val.count}`
-                                      // 对于复杂对象，显示关键信息
-                                      const entries = Object.entries(val)
-                                      if (entries.length > 0) {
-                                        const [firstKey, firstValue] = entries[0]
-                                        if (typeof firstValue === 'number') {
-                                          return `${firstValue.toFixed(2)}`
-                                        }
-                                      }
-                                      return '已计算'
-                                    } else {
-                                      return String(val)
-                                    }
-                                  }
-                                  
-                                  // 格式化键名显示
-                                  const formatKey = (k: string): string => {
-                                    const keyMap: { [key: string]: string } = {
-                                      'character_count': '字符统计',
-                                      'word_count': '词汇统计', 
-                                      'compression_ratio': '压缩比例',
-                                      'content_preservation': '内容保留',
-                                      'language_quality': '语言质量',
-                                      'structure_metrics': '结构指标',
-                                      'rule_application': '规则应用',
-                                      'conversion_summary': '转换摘要',
-                                      'processing_stages': '处理阶段'
-                                    }
-                                    return keyMap[k] || k.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
-                                  }
-                                  
+                            
+                            const formatValue = (val: any): string => {
+                              if (typeof val === 'number') {
+                                return val < 1 ? `${(val * 100).toFixed(1)}%` : val.toFixed(2)
+                              }
+                              return String(val)
+                            }
+                            
+                            const formatKey = (k: string): string => {
+                              const keyMap: { [key: string]: string } = {
+                                'word_count_retention': '字数保留率',
+                                'semantic_similarity': '语义相似度',
+                                'readability_score': '可读性评分',
+                                'length_ratio': '长度比率'
+                              }
+                              return keyMap[k] || k
+                            }
+                            
                             return (
                               <div key={key} className="flex justify-between">
-                                      <span className="text-muted-foreground">{formatKey(key)}:</span>
-                                <span className="font-medium">
-                                        {formatValue(value)}
-                                </span>
+                                <span className="text-muted-foreground">{formatKey(key)}:</span>
+                                <span className="font-medium">{formatValue(value)}</span>
                               </div>
                             )
                           })}
                         </div>
-                      </div>
-                    )}
-
-                    {conversionResult.status === 'completed' && (
-                      <div className="flex justify-center pt-4">
-                        <Button
-                          onClick={() => window.open(`/results/${conversionResult.id}`, '_blank')}
-                          className="w-full max-w-xs gap-2"
-                        >
-                          <Eye className="size-4" />
-                          查看详细结果和对比
-                        </Button>
                       </div>
                     )}
                   </CardContent>

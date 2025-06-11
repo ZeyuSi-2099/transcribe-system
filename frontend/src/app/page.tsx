@@ -172,12 +172,6 @@ export default function LandingPage() {
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </Link>
-                <Link href="/rules">
-                  <Button variant="outline" size="lg" className="w-full sm:w-auto">
-                    查看规则配置
-                    <ExternalLink className="ml-2 h-4 w-4" />
-                  </Button>
-                </Link>
               </div>
             </div>
           </div>
@@ -254,14 +248,10 @@ export default function LandingPage() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link href="/auth/login">
               <Button size="lg" variant="secondary" className="w-full sm:w-auto">
-                免费开始使用
+                开始使用
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
-            <Button size="lg" variant="outline" className="w-full sm:w-auto border-white text-white hover:bg-white hover:text-blue-600">
-              <Github className="mr-2 h-4 w-4" />
-              查看源码
-            </Button>
           </div>
         </div>
       </section>
@@ -271,7 +261,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <p className="text-sm">
-              © 2024 笔录转换系统. 基于现代Web技术构建，为高效文档处理而设计。
+              © 2025 智能笔录转换系统
             </p>
           </div>
         </div>
