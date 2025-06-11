@@ -24,6 +24,8 @@ class Settings(BaseSettings):
     ALLOWED_HOSTS: List[str] = [
         "http://localhost:3000",  # Next.js 开发服务器
         "http://127.0.0.1:3000",
+        "http://localhost:3001",  # Next.js 开发服务器 (备用端口)
+        "http://127.0.0.1:3001",
         "http://localhost:8000",  # FastAPI 开发服务器
         "http://127.0.0.1:8000",
         "https://transcribe.solutions",  # 生产环境域名
