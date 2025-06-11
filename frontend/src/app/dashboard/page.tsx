@@ -314,7 +314,7 @@ function TranscriptionConverter({ className }: TranscriptionConverterProps) {
               </Card>
 
               {/* 主要工作区 - 左右两列布局 */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 h-[calc(100vh-240px)]">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 h-[calc(100vh-320px)]">
                 {/* 左侧：输入区域 */}
                 <div className="flex flex-col h-full">
                   <Tabs defaultValue="text" className="w-full flex-1 flex flex-col">
