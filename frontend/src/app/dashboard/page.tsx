@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ArrowUp, Square, Wand2, Upload, FileText, Eye, BarChart3, Settings } from "lucide-react"
+import { ArrowUp, Square, Wand2, Upload, FileText, Eye, BarChart3, Settings, Sliders } from "lucide-react"
 import { cn } from "@/lib/utils"
 import FileUploadZone from "@/components/FileUploadZone"
 import { useRouter, useSearchParams } from "next/navigation"
@@ -244,6 +244,10 @@ function TranscriptionConverter({ className }: TranscriptionConverterProps) {
     checkStatus(result.id)
   }
 
+  const navigateToRuleManagement = () => {
+    router.push('/rules')
+  }
+
   return (
     <div className="flex h-screen bg-gray-50">
       {/* 侧边栏 */}
@@ -251,18 +255,18 @@ function TranscriptionConverter({ className }: TranscriptionConverterProps) {
       
       {/* 主内容区域 */}
       <div className="flex-1 overflow-hidden ml-14">
-        <div className={cn("h-full p-6 overflow-y-auto", className)}>
+        <div className={cn("h-full p-4 overflow-auto", className)}>
           <div className="w-full max-w-7xl mx-auto">
-            <div className="flex flex-col space-y-6">
+            <div className="flex flex-col space-y-4">
               {/* 页面标题和描述 */}
-              <div className="space-y-3">
-                <h1 className="text-3xl font-bold text-foreground">笔录转换工具</h1>
-                <p className="text-muted-foreground">当前为内测版本，支持通用转换规则与自定义转换规则</p>
+              <div className="space-y-2">
+                <h1 className="text-2xl font-bold text-foreground">笔录转换工具</h1>
+                <p className="text-sm text-muted-foreground">当前为内测版本，支持通用转换规则与自定义转换规则</p>
               </div>
 
               {/* 规则配置区域 - 深色样式 */}
               <Card className="border-gray-800 bg-gray-900 text-white">
-                <CardHeader className="pb-4">
+                <CardHeader className="pb-3 pt-3">
                   <CardTitle className="text-lg flex items-center gap-2 text-white">
                     <Settings className="h-5 w-5" />
                     规则配置
@@ -271,7 +275,7 @@ function TranscriptionConverter({ className }: TranscriptionConverterProps) {
                     选择适合的规则集来优化转换效果
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="pb-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4 flex-1">
                       <div className="flex items-center gap-2">
@@ -296,15 +300,24 @@ function TranscriptionConverter({ className }: TranscriptionConverterProps) {
                         </div>
                       )}
                     </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="bg-gray-800 border-gray-700 text-white hover:bg-gray-700 hover:text-white"
+                      onClick={navigateToRuleManagement}
+                    >
+                      <Sliders className="mr-2 h-4 w-4" />
+                      规则配置与管理
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
 
               {/* 主要工作区 - 左右两列布局 */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 h-[calc(100vh-280px)]">
                 {/* 左侧：输入区域 */}
-                <div className="space-y-6">
-                  <Tabs defaultValue="text" className="w-full">
+                <div className="flex flex-col h-full">
+                  <Tabs defaultValue="text" className="w-full flex-1 flex flex-col">
                     <TabsList className="grid w-full grid-cols-2">
                       <TabsTrigger value="text" className="flex items-center gap-2">
                         <FileText className="h-4 w-4" />
@@ -316,11 +329,11 @@ function TranscriptionConverter({ className }: TranscriptionConverterProps) {
                       </TabsTrigger>
                     </TabsList>
                     
-                    <TabsContent value="text" className="space-y-4 mt-4">
-                      <Card>
-                        <CardHeader className="pb-4">
+                    <TabsContent value="text" className="flex-1 mt-2 flex flex-col">
+                      <Card className="flex-1 flex flex-col">
+                        <CardHeader className="pb-2 pt-3">
                           <div className="flex items-center justify-between">
-                            <CardTitle className="text-lg">原始笔录</CardTitle>
+                            <CardTitle className="text-base">原始笔录</CardTitle>
                             {inputText && (
                               <Button 
                                 variant="ghost" 
@@ -332,26 +345,26 @@ function TranscriptionConverter({ className }: TranscriptionConverterProps) {
                             )}
                           </div>
                         </CardHeader>
-                        <CardContent>
-                          <div className="relative border border-input bg-background rounded-lg focus-within:ring-1 focus-within:ring-ring">
+                        <CardContent className="flex-1 pb-3">
+                          <div className="relative border border-input bg-background rounded-lg focus-within:ring-1 focus-within:ring-ring h-full">
                             <Textarea
                               ref={inputRef}
                               value={inputText}
                               onChange={handleInputChange}
                               placeholder="请在此处粘贴或输入原始笔录内容..."
-                              className="min-h-[350px] resize-none border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                              className="h-full min-h-[calc(100%-2px)] resize-none border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
                             />
                           </div>
                         </CardContent>
                       </Card>
                     </TabsContent>
                     
-                    <TabsContent value="upload" className="space-y-4 mt-4">
-                      <Card>
-                        <CardHeader className="pb-4">
-                          <CardTitle className="text-lg">文件上传</CardTitle>
+                    <TabsContent value="upload" className="flex-1 mt-2 flex flex-col">
+                      <Card className="flex-1 flex flex-col">
+                        <CardHeader className="pb-2 pt-3">
+                          <CardTitle className="text-base">文件上传</CardTitle>
                         </CardHeader>
-                        <CardContent>
+                        <CardContent className="flex-1 pb-3">
                           <FileUploadZone 
                             onUploadSuccess={handleFileUploadSuccess}
                             onUploadError={(error) => console.error('Upload error:', error)}
@@ -363,11 +376,11 @@ function TranscriptionConverter({ className }: TranscriptionConverterProps) {
                 </div>
 
                 {/* 右侧：转换结果 */}
-                <div className="space-y-4">
-                  <Card>
-                    <CardHeader className="pb-4">
+                <div className="flex flex-col h-full">
+                  <Card className="flex-1 flex flex-col">
+                    <CardHeader className="pb-2 pt-3">
                       <div className="flex items-center justify-between">
-                        <CardTitle className="text-lg">转换结果</CardTitle>
+                        <CardTitle className="text-base">转换结果</CardTitle>
                         {conversionResult && (
                           <Button 
                             variant="ghost" 
@@ -379,14 +392,14 @@ function TranscriptionConverter({ className }: TranscriptionConverterProps) {
                         )}
                       </div>
                     </CardHeader>
-                    <CardContent>
-                      <div className="relative border border-input bg-background rounded-lg">
+                    <CardContent className="flex-1 pb-3">
+                      <div className="relative border border-input bg-background rounded-lg h-full">
                         <Textarea
                           ref={outputRef}
                           value={conversionResult?.converted_text || ''}
                           readOnly
                           placeholder="转换后的内容将显示在这里..."
-                          className="min-h-[350px] resize-none border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                          className="h-full min-h-[calc(100%-2px)] resize-none border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
                         />
                       </div>
                     </CardContent>
@@ -395,7 +408,7 @@ function TranscriptionConverter({ className }: TranscriptionConverterProps) {
               </div>
 
               {/* 转换按钮 */}
-              <div className="flex justify-center py-4">
+              <div className="flex justify-center py-2">
                 <Button
                   onClick={handleConvert}
                   disabled={!inputText.trim() || isConverting}
@@ -416,11 +429,11 @@ function TranscriptionConverter({ className }: TranscriptionConverterProps) {
                 </Button>
               </div>
 
-              {/* 转换结果详情 */}
+              {/* 转换结果详情 - 仅在有结果时显示 */}
               {conversionResult && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
+                <Card className="mb-2">
+                  <CardHeader className="py-3">
+                    <CardTitle className="text-base flex items-center gap-2">
                       <Eye className="h-5 w-5" />
                       转换结果详情
                     </CardTitle>
@@ -428,11 +441,11 @@ function TranscriptionConverter({ className }: TranscriptionConverterProps) {
                       查看详细的转换信息和质量评估
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="space-y-3 pb-3">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       <div className="space-y-1">
                         <p className="text-sm font-medium">任务ID</p>
-                        <p className="text-2xl font-bold">{conversionResult.id}</p>
+                        <p className="text-xl font-bold">{conversionResult.id}</p>
                       </div>
                       <div className="space-y-1">
                         <p className="text-sm font-medium">状态</p>
@@ -443,7 +456,7 @@ function TranscriptionConverter({ className }: TranscriptionConverterProps) {
                       {conversionResult.processing_time && (
                         <div className="space-y-1">
                           <p className="text-sm font-medium">处理时间</p>
-                          <p className="text-2xl font-bold">{conversionResult.processing_time.toFixed(2)}s</p>
+                          <p className="text-xl font-bold">{conversionResult.processing_time.toFixed(2)}s</p>
                         </div>
                       )}
                       {conversionResult.quality_metrics?.overall_score && (
