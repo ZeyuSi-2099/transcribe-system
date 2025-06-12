@@ -495,7 +495,17 @@ function TranscriptionConverter({ className }: TranscriptionConverterProps) {
                                 if (val.score !== undefined) {
                                   return `${(val.score * 100).toFixed(1)}%`
                                 }
-                                // 如果有多个属性，显示主要的数值
+                                if (val.overall_score !== undefined) {
+                                  return `${(val.overall_score * 100).toFixed(1)}%`
+                                }
+                                // 如果有多个属性，优先显示百分比相关的数值
+                                const percentKeys = ['retention_rate', 'score', 'overall_score', 'similarity', 'ratio']
+                                for (const key of percentKeys) {
+                                  if (val[key] !== undefined && typeof val[key] === 'number') {
+                                    return `${(val[key] * 100).toFixed(1)}%`
+                                  }
+                                }
+                                // 显示第一个数值属性
                                 const numericKeys = Object.keys(val).filter(k => typeof val[k] === 'number')
                                 if (numericKeys.length > 0) {
                                   const mainKey = numericKeys[0]
@@ -504,7 +514,16 @@ function TranscriptionConverter({ className }: TranscriptionConverterProps) {
                                     `${(mainValue * 100).toFixed(1)}%` : 
                                     mainValue.toFixed(2)
                                 }
-                                return JSON.stringify(val)
+                                // 如果是数组，显示长度
+                                if (Array.isArray(val)) {
+                                  return `${val.length} 项`
+                                }
+                                // 最后才显示简化的对象信息
+                                const keys = Object.keys(val)
+                                if (keys.length <= 3) {
+                                  return keys.map(k => `${k}: ${val[k]}`).join(', ')
+                                }
+                                return `${keys.length} 个属性`
                               }
                               
                               if (typeof val === 'number') {
