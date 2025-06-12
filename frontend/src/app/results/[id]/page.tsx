@@ -108,8 +108,12 @@ export default function ResultsPage() {
 
   // 简单的文本差异分析
   const analyzeDifferences = (original: string, converted: string): DiffSegment[] => {
-    const originalSentences = original.split(/[。！？\n]/).filter(s => s.trim())
-    const convertedSentences = converted.split(/[。！？\n]/).filter(s => s.trim())
+    // 安全检查，防止 null 或 undefined
+    const safeOriginal = original || ''
+    const safeConverted = converted || ''
+    
+    const originalSentences = safeOriginal.split(/[。！？\n]/).filter(s => s.trim())
+    const convertedSentences = safeConverted.split(/[。！？\n]/).filter(s => s.trim())
     
     const segments: DiffSegment[] = []
     
@@ -138,15 +142,19 @@ export default function ResultsPage() {
 
   // 计算定量指标
   const calculateMetrics = (original: string, converted: string) => {
-    const originalLength = original.length
-    const convertedLength = converted.length
-    const retentionRate = (convertedLength / originalLength) * 100
+    // 安全检查，防止 null 或 undefined
+    const safeOriginal = original || ''
+    const safeConverted = converted || ''
+    
+    const originalLength = safeOriginal.length
+    const convertedLength = safeConverted.length
+    const retentionRate = originalLength > 0 ? (convertedLength / originalLength) * 100 : 0
     
     // 简单的相似度计算
-    const originalWords = original.split(/\s+/)
-    const convertedWords = converted.split(/\s+/)
+    const originalWords = safeOriginal.split(/\s+/).filter(word => word.trim())
+    const convertedWords = safeConverted.split(/\s+/).filter(word => word.trim())
     const commonWords = originalWords.filter(word => convertedWords.includes(word))
-    const preservationRate = (commonWords.length / originalWords.length) * 100
+    const preservationRate = originalWords.length > 0 ? (commonWords.length / originalWords.length) * 100 : 0
     
     return {
       retentionRate,
