@@ -483,6 +483,30 @@ function TranscriptionConverter({ className }: TranscriptionConverterProps) {
                             if (key === 'overall_score') return null
                             
                             const formatValue = (val: any): string => {
+                              // 处理嵌套对象的情况
+                              if (typeof val === 'object' && val !== null) {
+                                // 如果是对象，尝试提取有用的数值
+                                if (val.retention_rate !== undefined) {
+                                  return `${(val.retention_rate * 100).toFixed(1)}%`
+                                }
+                                if (val.original !== undefined && val.converted !== undefined) {
+                                  return `${val.original} → ${val.converted}`
+                                }
+                                if (val.score !== undefined) {
+                                  return `${(val.score * 100).toFixed(1)}%`
+                                }
+                                // 如果有多个属性，显示主要的数值
+                                const numericKeys = Object.keys(val).filter(k => typeof val[k] === 'number')
+                                if (numericKeys.length > 0) {
+                                  const mainKey = numericKeys[0]
+                                  const mainValue = val[mainKey]
+                                  return typeof mainValue === 'number' && mainValue < 1 ? 
+                                    `${(mainValue * 100).toFixed(1)}%` : 
+                                    mainValue.toFixed(2)
+                                }
+                                return JSON.stringify(val)
+                              }
+                              
                               if (typeof val === 'number') {
                                 return val < 1 ? `${(val * 100).toFixed(1)}%` : val.toFixed(2)
                               }
@@ -491,6 +515,14 @@ function TranscriptionConverter({ className }: TranscriptionConverterProps) {
                             
                             const formatKey = (k: string): string => {
                               const keyMap: { [key: string]: string } = {
+                                'character_count': '字符统计',
+                                'word_count': '词数统计',
+                                'compression_ratio': '压缩比率',
+                                'language_quality': '语言质量',
+                                'content_preservation': '内容保留',
+                                'structure_metrics': '结构指标',
+                                'quality_report': '质量报告',
+                                'processing_stages': '处理阶段',
                                 'word_count_retention': '字数保留率',
                                 'semantic_similarity': '语义相似度',
                                 'readability_score': '可读性评分',
