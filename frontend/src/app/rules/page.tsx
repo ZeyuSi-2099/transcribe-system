@@ -1175,12 +1175,12 @@ function RulesPageContent() {
           <div className="max-w-7xl mx-auto">
             {/* 顶部标题和操作区 */}
             <div className="flex justify-between items-center mb-6">
-              <div>
+            <div>
                 <h2 className="text-2xl font-bold text-black">规则配置</h2>
                 <p className="text-gray-600 mt-1">
                   配置和管理转换规则，创建自定义规则集
                 </p>
-              </div>
+            </div>
               
               <div className="flex items-center gap-3">
                 {/* 现代化的规则集选择器 */}
@@ -1189,16 +1189,16 @@ function RulesPageContent() {
                   currentRuleSetId={currentRuleSetId}
                   onRuleSetChange={handleRuleSetChange}
                 />
-                
-                <Button 
-                  onClick={() => setIsAddRuleOpen(true)}
+              
+              <Button
+                onClick={() => setIsAddRuleOpen(true)}
                   className="bg-black text-white hover:bg-gray-800"
-                >
+              >
                   <Plus className="w-4 h-4 mr-2" />
-                  新增规则
-                </Button>
-              </div>
+                新增规则
+              </Button>
             </div>
+          </div>
 
             {/* 主要内容区域 */}
             <div className="flex gap-6">
@@ -1229,28 +1229,28 @@ function RulesPageContent() {
                   </div>
                 </div>
               </div>
-
+              
               {/* 右侧：规则卡片网格 - 一行显示三个卡片 */}
               <div className="flex-1">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {filteredRules.map((rule) => (
-                    <RuleCard
-                      key={rule.id}
-                      rule={rule}
+                  <RuleCard
+                    key={rule.id}
+                    rule={rule}
                       onToggle={handleToggleRule}
-                      onViewDetails={handleRuleClick}
-                    />
-                  ))}
-                                </div>
-                
+                    onViewDetails={handleRuleClick}
+                  />
+                ))}
+              </div>
+              
                 {filteredRules.length === 0 && (
-                  <div className="text-center py-12">
+                <div className="text-center py-12">
                     <div className="text-gray-400 text-lg mb-2">暂无规则</div>
                     <p className="text-gray-500 text-sm">
                       {selectedCategory === 'all' ? '当前规则集中没有规则' : '当前分类下没有规则'}
                     </p>
-                  </div>
-                )}
+                </div>
+              )}
               </div>
             </div>
           </div>
