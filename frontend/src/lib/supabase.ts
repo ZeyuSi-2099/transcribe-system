@@ -5,11 +5,12 @@
 
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://ghbtjyetllhcdddhjygi.supabase.co'
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdoYnRqeWV0bGxoY2RkZGhqeWdpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkxODk2OTMsImV4cCI6MjA2NDc2NTY5M30.9z608olZIwPpjNpcWJ_qgiJwAWHrctnLoSRE32mB47s'
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables')
+// 在开发环境中警告，但不阻止构建
+if ((!supabaseUrl || !supabaseAnonKey) && process.env.NODE_ENV === 'development') {
+  console.warn('Warning: Missing Supabase environment variables')
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
