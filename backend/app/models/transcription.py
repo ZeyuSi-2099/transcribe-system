@@ -28,6 +28,9 @@ class Transcription(TranscriptionBase, table=True):
     """转换记录表模型"""
     id: Optional[int] = Field(default=None, primary_key=True)
     
+    # 新增字段：是否用户主动保存的任务
+    is_saved: bool = Field(default=False, description="是否用户主动保存的任务")
+    
     # 转换结果
     converted_text: Optional[str] = Field(default=None, description="转换后的文本")
     
@@ -61,6 +64,7 @@ class Transcription(TranscriptionBase, table=True):
 class TranscriptionCreate(TranscriptionBase):
     """创建转换记录的请求模型"""
     rule_config: Optional[Dict[str, Any]] = None
+    is_saved: bool = Field(default=False, description="是否用户主动保存的任务")
 
 
 class TranscriptionUpdate(SQLModel):
@@ -72,6 +76,7 @@ class TranscriptionUpdate(SQLModel):
     quality_metrics: Optional[Dict[str, Any]] = None
     completed_at: Optional[datetime] = None
     processing_time: Optional[float] = None
+    is_saved: Optional[bool] = None # 允许更新is_saved状态
 
 
 class TranscriptionPublic(TranscriptionBase):

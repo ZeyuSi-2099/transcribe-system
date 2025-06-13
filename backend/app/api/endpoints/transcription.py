@@ -270,6 +270,51 @@ async def delete_transcription(transcription_id: int, session: SessionDep):
     return {"message": "转换记录已删除"}
 
 
+@router.patch("/{transcription_id}/save", response_model=TranscriptionPublic)
+async def toggle_save_transcription(
+    transcription_id: int,
+    is_saved: bool,
+    session: SessionDep
+):
+    """
+    更新转换记录的保存状态
+    """
+    transcription = session.get(Transcription, transcription_id)
+    if not transcription:
+        raise HTTPException(status_code=404, detail="转换记录不存在")
+    
+    transcription.is_saved = is_saved
+    session.add(transcription)
+    session.commit()
+    session.refresh(transcription)
+    
+    return transcription
+
+
+@router.get("/saved", response_model=List[TranscriptionSummary])
+async def list_saved_transcriptions(
+    session: SessionDep,
+    skip: int = 0,
+    limit: int = 20
+):
+    """
+    获取所有已保存的转换记录列表
+    """
+    statement = select(Transcription).where(Transcription.is_saved == True).offset(skip).limit(limit).order_by(Transcription.created_at.desc())
+    transcriptions = session.exec(statement).all()
+    
+    return [
+        TranscriptionSummary(
+            id=t.id,
+            title=t.title,
+            status=t.status,
+            created_at=t.created_at,
+            processing_time=t.processing_time
+        )
+        for t in transcriptions
+    ]
+
+
 async def process_transcription(
     transcription_id: int, 
     original_text: str, 

@@ -4,8 +4,9 @@
 
 from datetime import datetime
 from typing import List, Optional
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Depends
 from sqlmodel import select
+from sqlalchemy.orm import Session
 
 from app.core.database import SessionDep
 from app.models.rule import (
@@ -15,6 +16,8 @@ from app.models.rule import (
     RuleType, RuleScope
 )
 from app.services.rule_engine import rule_engine
+from app.services.rule_service import RuleService
+from pydantic import BaseModel
 
 router = APIRouter()
 
@@ -332,4 +335,69 @@ async def get_rule_scopes():
 async def get_default_rules():
     """获取默认规则列表"""
     default_rules = await rule_engine._get_default_rules()
-    return default_rules 
+    return default_rules
+
+
+class RuleGenerateRequest(BaseModel):
+    description: str
+
+@router.post("/generate")
+async def generate_rule(request: RuleGenerateRequest, session: SessionDep):
+    """
+    根据自然语言描述生成规则
+    """
+    try:
+        rule_service = RuleService(db)
+        generated_rule = await rule_service.generate_rule_from_description(request.description)
+        return generated_rule
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"生成规则失败: {str(e)}")
+
+@router.get("/", response_model=List[Rule])
+def get_rules(session: SessionDep):
+    """
+    获取所有规则
+    """
+    rule_service = RuleService(db)
+    return rule_service.get_all_rules()
+
+@router.post("/", response_model=Rule)
+def create_rule(rule: RuleCreate, session: SessionDep):
+    """
+    创建新规则
+    """
+    rule_service = RuleService(db)
+    return rule_service.create_rule(rule)
+
+@router.get("/{rule_id}", response_model=Rule)
+def get_rule(rule_id: int, session: SessionDep):
+    """
+    获取指定规则
+    """
+    rule_service = RuleService(db)
+    rule = rule_service.get_rule(rule_id)
+    if not rule:
+        raise HTTPException(status_code=404, detail="规则不存在")
+    return rule
+
+@router.put("/{rule_id}", response_model=Rule)
+def update_rule(rule_id: int, rule: RuleUpdate, session: SessionDep):
+    """
+    更新规则
+    """
+    rule_service = RuleService(db)
+    updated_rule = rule_service.update_rule(rule_id, rule)
+    if not updated_rule:
+        raise HTTPException(status_code=404, detail="规则不存在")
+    return updated_rule
+
+@router.delete("/{rule_id}")
+def delete_rule(rule_id: int, session: SessionDep):
+    """
+    删除规则
+    """
+    rule_service = RuleService(db)
+    success = rule_service.delete_rule(rule_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="规则不存在")
+    return {"message": "规则删除成功"} 

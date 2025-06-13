@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
+import { useRuleSet } from '@/contexts/RuleSetContext'
 import { motion } from 'framer-motion'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -86,6 +87,7 @@ export default function Sidebar() {
   const router = useRouter()
   const pathname = usePathname()
   const { user, signOut } = useAuth()
+  const { ruleSets } = useRuleSet()
   const [isCollapsed, setIsCollapsed] = useState(true)
   const [isHistoryExpanded, setIsHistoryExpanded] = useState(true)
   const [isRulesExpanded, setIsRulesExpanded] = useState(true)
@@ -99,11 +101,19 @@ export default function Sidebar() {
     { id: 5, title: '培训课程笔记', createdAt: '2024-06-04 16:30', status: 'completed' }
   ])
   
-  const [recentRuleSets, setRecentRuleSets] = useState<RuleSetItem[]>([
-    { id: 'default', name: '通用规则集', updatedAt: '2024-06-04 20:00', isDefault: true },
-    { id: 'custom_1', name: '会议专用规则', updatedAt: '2024-06-04 19:30', isDefault: false },
-    { id: 'custom_2', name: '访谈优化规则', updatedAt: '2024-06-04 18:45', isDefault: false }
-  ])
+  // 转换全局规则集数据为Sidebar需要的格式
+  const recentRuleSets: RuleSetItem[] = ruleSets.map(ruleSet => ({
+    id: ruleSet.id,
+    name: ruleSet.name,
+    updatedAt: new Date(ruleSet.updatedAt).toLocaleString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    }),
+    isDefault: ruleSet.isDefault
+  }))
 
   const handleNewConversion = () => {
     router.push('/')

@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { useState, useRef, useEffect, useCallback, Suspense } from "react"
+import { useRuleSet } from "@/contexts/RuleSetContext"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -10,7 +11,8 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { ArrowUp, Square, Wand2, Upload, FileText, Eye, BarChart3, Settings, Sliders, Download } from "lucide-react"
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination"
+import { ArrowUp, Square, Wand2, Upload, FileText, Eye, BarChart3, Settings, Sliders, Download, ChevronLeft, ChevronRight, TrendingUp, FileCheck, Target, MoreHorizontal, Save } from "lucide-react"
 import { cn } from "@/lib/utils"
 import FileUploadZone from "@/components/FileUploadZone"
 import { useRouter, useSearchParams } from "next/navigation"
@@ -52,6 +54,19 @@ interface RuleSet {
   description: string
   isDefault: boolean
   enabledRulesCount: number
+}
+
+interface ParagraphPair {
+  original: string
+  converted: string
+  index: number
+}
+
+interface KeyMetric {
+  name: string
+  value: string
+  definition: string
+  variables: { [key: string]: string | number }
 }
 
 function useAutoResizeTextarea({
@@ -107,13 +122,15 @@ function useAutoResizeTextarea({
 
 function TranscriptionConverter({ className }: TranscriptionConverterProps) {
   const router = useRouter()
+  const { ruleSets, currentRuleSetId, setCurrentRuleSet, getCurrentRuleSet } = useRuleSet()
   const [inputText, setInputText] = useState('')
   const [conversionResult, setConversionResult] = useState<ConversionResult | null>(null)
   const [isConverting, setIsConverting] = useState(false)
-  const [selectedRuleSetId, setSelectedRuleSetId] = useState('default')
   const [activeTab, setActiveTab] = useState('text')
   const [uploadedFileInfo, setUploadedFileInfo] = useState<{name: string, type: string} | null>(null)
   const [showAnalysisModal, setShowAnalysisModal] = useState(false)
+  const [currentParagraphIndex, setCurrentParagraphIndex] = useState(0)
+  const [paragraphs, setParagraphs] = useState<ParagraphPair[]>([])
   
   const searchParams = useSearchParams()
   
@@ -127,12 +144,7 @@ function TranscriptionConverter({ className }: TranscriptionConverterProps) {
     maxHeight: 300,
   })
 
-  // 更新规则集数据 - 只保留一个官方规则集
-  const [availableRuleSets] = useState<RuleSet[]>([
-    { id: 'default', name: '官方-通用规则集', description: '适用于大多数笔录转换场景', isDefault: true, enabledRulesCount: 8 }
-  ])
-
-  const selectedRuleSet = availableRuleSets.find(rs => rs.id === selectedRuleSetId)
+  const selectedRuleSet = getCurrentRuleSet()
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputText(e.target.value)
@@ -148,9 +160,9 @@ function TranscriptionConverter({ className }: TranscriptionConverterProps) {
     try {
       // 构建规则配置
       const ruleConfig = {
-        ruleSetId: selectedRuleSetId,
+        ruleSetId: currentRuleSetId,
         ruleSetName: selectedRuleSet?.name || '官方-通用规则集',
-        enabledRules: [] // 这里应该根据选中的规则集获取启用的规则
+        enabledRules: selectedRuleSet?.enabledRules || []
       }
 
       // 调用后端API进行转换，包含规则配置
@@ -270,6 +282,31 @@ function TranscriptionConverter({ className }: TranscriptionConverterProps) {
     URL.revokeObjectURL(url)
   }
 
+  const handleSaveTask = async () => {
+    if (!conversionResult || !conversionResult.id) return
+
+    try {
+      const response = await fetch(`/api/v1/transcription/${conversionResult.id}/save?is_saved=true`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error('保存任务失败')
+      }
+
+      const result = await response.json()
+      console.log('任务已保存:', result)
+      // 可以添加一些UI反馈，例如Toast提示
+      alert('任务已保存！')
+    } catch (error) {
+      console.error('保存任务出错:', error)
+      alert('保存任务失败，请重试！')
+    }
+  }
+
   const handleTabChange = (value: string) => {
     // 如果从文件上传切换到文本输入，清空输入文本
     if (activeTab === 'upload' && value === 'text') {
@@ -280,6 +317,134 @@ function TranscriptionConverter({ className }: TranscriptionConverterProps) {
     }
     setActiveTab(value)
   }
+
+  // 段落拆分函数
+  const splitIntoParagraphs = (originalText: string, convertedText: string): ParagraphPair[] => {
+    // 更智能的段落拆分：将连续的对话轮次合并为更大的段落
+    const originalLines = originalText.split('\n').filter(line => line.trim().length > 0)
+    const convertedSentences = convertedText.split(/[。！？\n]+/).filter(s => s.trim().length > 0)
+    
+    // 提取原始文本中的对话轮次
+    const dialogueTurns: string[] = []
+    let currentTurn = ''
+    
+    for (const line of originalLines) {
+      const trimmedLine = line.trim()
+      // 检查是否是新的对话轮次（以M:或I:开头）
+      if (/^[MI]:\s*/.test(trimmedLine)) {
+        if (currentTurn) {
+          dialogueTurns.push(currentTurn.trim())
+        }
+        currentTurn = trimmedLine
+      } else if (currentTurn) {
+        // 继续当前对话轮次
+        currentTurn += '\n' + trimmedLine
+      } else {
+        // 如果没有对话标识，直接作为一个段落
+        dialogueTurns.push(trimmedLine)
+      }
+    }
+    
+    // 添加最后一个对话轮次
+    if (currentTurn) {
+      dialogueTurns.push(currentTurn.trim())
+    }
+    
+    // 将对话轮次合并为更大的段落（每3-4个轮次为一个段落）
+    const mergedParagraphs: string[] = []
+    const turnsPerParagraph = 4 // 每个段落包含4个对话轮次
+    
+    if (dialogueTurns.length > 0) {
+      for (let i = 0; i < dialogueTurns.length; i += turnsPerParagraph) {
+        const paragraphTurns = dialogueTurns.slice(i, i + turnsPerParagraph)
+        mergedParagraphs.push(paragraphTurns.join('\n\n'))
+      }
+    } else {
+      // 如果没有找到对话格式，按照句子数量拆分
+      const sentences = originalText.split(/[。！？]+/).filter(s => s.trim().length > 0)
+      const sentencesPerParagraph = 3
+      for (let i = 0; i < sentences.length; i += sentencesPerParagraph) {
+        const paragraphSentences = sentences.slice(i, i + sentencesPerParagraph)
+        mergedParagraphs.push(paragraphSentences.join('。') + '。')
+      }
+    }
+    
+    // 对转换后的文本也进行类似的拆分
+    const convertedParagraphs: string[] = []
+    const convertedSentencesPerParagraph = Math.max(1, Math.floor(convertedSentences.length / mergedParagraphs.length))
+    
+    for (let i = 0; i < convertedSentences.length; i += convertedSentencesPerParagraph) {
+      const paragraphSentences = convertedSentences.slice(i, i + convertedSentencesPerParagraph)
+      convertedParagraphs.push(paragraphSentences.join('。') + '。')
+    }
+    
+    // 创建段落对
+    const pairs: ParagraphPair[] = []
+    const maxLength = Math.max(mergedParagraphs.length, convertedParagraphs.length)
+    
+    for (let i = 0; i < maxLength; i++) {
+      pairs.push({
+        original: mergedParagraphs[i] || '',
+        converted: convertedParagraphs[i] || '',
+        index: i
+      })
+    }
+    
+    return pairs
+  }
+
+  // 计算关键指标
+  const calculateKeyMetrics = (original: string, converted: string): KeyMetric[] => {
+    const originalLength = original.length
+    const convertedLength = converted.length
+
+    // 严格保留率计算（简化版本）
+    const strictRetentionRate = originalLength > 0 ? ((convertedLength / originalLength) * 100) : 0
+    
+    // 广义保留率计算（假设去除了一些口语词）
+    const oralWordsRemoved = Math.max(0, originalLength - convertedLength)
+    const broadRetained = convertedLength + Math.floor(oralWordsRemoved * 0.5) // 假设50%的删除是口语词/语气词
+    const broadRetentionRate = originalLength > 0 ? Math.min(100, (broadRetained / originalLength) * 100) : 0
+
+    return [
+      {
+        name: "文本长度",
+        value: `${originalLength} → ${convertedLength}`,
+        definition: "衡量文本转换前后的长度变化，反映内容压缩程度",
+        variables: {
+          "原始笔录字数": originalLength,
+          "转换后字数": convertedLength
+        }
+      },
+      {
+        name: "文字保留率（严格）",
+        value: `${strictRetentionRate.toFixed(1)}%`,
+        definition: "保留字数 ÷ 原始笔录字数 × 100%",
+        variables: {
+          "原始笔录字数": originalLength,
+          "被保留的字数（严格一致）": convertedLength
+        }
+      },
+      {
+        name: "文字保留率（宽泛）",
+        value: `${broadRetentionRate.toFixed(1)}%`,
+        definition: "在严格指标基础上，纳入口语词、语气词去除的保留率，但不包含改写",
+        variables: {
+          "原始笔录字数": originalLength,
+          "被保留的字数（允许口语词/语气词去除）": broadRetained
+        }
+      }
+    ]
+  }
+
+  // 当转换结果更新时，重新计算段落和指标
+  useEffect(() => {
+    if (conversionResult && conversionResult.original_text && conversionResult.converted_text) {
+      const newParagraphs = splitIntoParagraphs(conversionResult.original_text, conversionResult.converted_text)
+      setParagraphs(newParagraphs)
+      setCurrentParagraphIndex(0)
+    }
+  }, [conversionResult])
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -313,12 +478,12 @@ function TranscriptionConverter({ className }: TranscriptionConverterProps) {
                     <div className="flex items-center gap-3 flex-1">
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-medium text-white">规则集：</span>
-                        <Select value={selectedRuleSetId} onValueChange={setSelectedRuleSetId}>
+                        <Select value={currentRuleSetId} onValueChange={setCurrentRuleSet}>
                           <SelectTrigger className="w-52 bg-gray-800 border-gray-700 text-white text-xs">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent className="bg-gray-800 border-gray-700">
-                            {availableRuleSets.map(ruleSet => (
+                            {ruleSets.map(ruleSet => (
                               <SelectItem key={ruleSet.id} value={ruleSet.id} className="text-white hover:bg-gray-700 text-xs">
                                 <span>{ruleSet.name}</span>
                               </SelectItem>
@@ -432,6 +597,19 @@ function TranscriptionConverter({ className }: TranscriptionConverterProps) {
                       <Download className="h-3 w-3 mr-1" />
                       结果下载
                     </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleSaveTask}
+                      disabled={!conversionResult}
+                      className={cn(
+                        "text-xs",
+                        !conversionResult && "text-muted-foreground cursor-not-allowed"
+                      )}
+                    >
+                      <Save className="h-3 w-3 mr-1" />
+                      保存任务
+                    </Button>
                   </div>
 
                   {/* 转换结果区域 - 与左侧对齐 */}
@@ -480,118 +658,310 @@ function TranscriptionConverter({ className }: TranscriptionConverterProps) {
         </div>
       </div>
 
-      {/* 结果分析浮窗 */}
+      {/* 优化后的结果分析浮窗 */}
       <Dialog open={showAnalysisModal} onOpenChange={setShowAnalysisModal}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>转换结果分析</DialogTitle>
+        <DialogContent 
+          className="max-w-none p-4"
+          style={{
+            width: '95vw',
+            height: '90vh',
+            maxWidth: 'none',
+            maxHeight: 'none'
+          }}
+        >
+          <DialogHeader className="pb-1">
+            <DialogTitle className="text-lg text-black">转换结果分析</DialogTitle>
           </DialogHeader>
           
           {conversionResult && (
-            <div className="space-y-6">
-              {/* 质量评分 */}
-              <div className="bg-muted/50 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-medium">综合质量评分</h3>
-                  <span className="text-2xl font-bold text-primary">
-                    {conversionResult.quality_score?.toFixed(1) || 'N/A'}
-                  </span>
+            <div className="flex flex-col h-full space-y-2 overflow-hidden">
+              {/* 上部：关键指标区域 */}
+              <div className="flex gap-4">
+                {/* 左侧：关键指标标题（竖排） */}
+                <div className="flex items-center justify-center w-12">
+                  <div className="flex flex-col items-center gap-1">
+                    <Target className="h-5 w-5 text-black" />
+                    <div className="flex flex-col items-center text-lg font-semibold text-black">
+                      <span>关</span>
+                      <span>键</span>
+                      <span>指</span>
+                      <span>标</span>
+                    </div>
+                  </div>
                 </div>
-                <Progress 
-                  value={conversionResult.quality_score || 0} 
-                  className="h-2"
-                />
+                
+                {/* 右侧：三个指标卡片 */}
+                <div className="flex-1 grid grid-cols-3 gap-4">
+                  {calculateKeyMetrics(conversionResult.original_text, conversionResult.converted_text).map((metric, index) => (
+                    <Card key={index} className="border-black hover:shadow-md transition-shadow">
+                      <CardHeader className="pb-1 pt-2 px-3">
+                        <div className="flex items-center gap-2 mb-1">
+                          {index === 0 && <TrendingUp className="h-3 w-3 text-black" />}
+                          {index === 1 && <FileCheck className="h-3 w-3 text-black" />}
+                          {index === 2 && <Target className="h-3 w-3 text-black" />}
+                          <CardTitle className="text-xs text-black">{metric.name}</CardTitle>
+                        </div>
+                        <div className="text-xs text-gray-600 leading-tight mb-1">
+                          {metric.definition}
+                        </div>
+                        <div className="text-xl font-bold text-black">
+                          {metric.value}
+                        </div>
+                      </CardHeader>
+                      <CardContent className="pt-0 pb-2 px-3">
+                        <div className="space-y-0.5">
+                          {Object.entries(metric.variables).map(([key, value]) => (
+                            <div key={key} className="flex justify-between text-xs">
+                              <span className="text-gray-600">{key}:</span>
+                              <span className="font-medium text-black">{value}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
               </div>
 
-              {/* 质量指标详情 */}
-              {conversionResult.quality_metrics && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* 字符统计 */}
-                  <div className="bg-card border rounded-lg p-4">
-                    <h4 className="font-medium mb-3 flex items-center gap-2">
-                      <FileText className="h-4 w-4" />
-                      字符统计
-                    </h4>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">原始字符数:</span>
-                        <span>{conversionResult.quality_metrics.character_count?.original || 0}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">转换后字符数:</span>
-                        <span>{conversionResult.quality_metrics.character_count?.converted || 0}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">保留率:</span>
-                        <span>{((conversionResult.quality_metrics.character_count?.retention_rate || 0) * 100).toFixed(1)}%</span>
-                      </div>
-                    </div>
-                  </div>
+              {/* 分割线 */}
+              <div className="border-t border-black"></div>
 
-                  {/* 词汇统计 */}
-                  <div className="bg-card border rounded-lg p-4">
-                    <h4 className="font-medium mb-3 flex items-center gap-2">
-                      <BarChart3 className="h-4 w-4" />
-                      词汇统计
-                    </h4>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">原始词数:</span>
-                        <span>{conversionResult.quality_metrics.word_count?.original || 0}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">转换后词数:</span>
-                        <span>{conversionResult.quality_metrics.word_count?.converted || 0}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">保留率:</span>
-                        <span>{((conversionResult.quality_metrics.word_count?.retention_rate || 0) * 100).toFixed(1)}%</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* 压缩比 */}
-                  <div className="bg-card border rounded-lg p-4">
-                    <h4 className="font-medium mb-3">压缩比</h4>
-                    <div className="text-2xl font-bold text-primary">
-                      {((conversionResult.quality_metrics.compression_ratio || 0) * 100).toFixed(1)}%
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      转换后文本相对原文的长度比例
-                    </p>
-                  </div>
-
-                  {/* 语言质量 */}
-                  <div className="bg-card border rounded-lg p-4">
-                    <h4 className="font-medium mb-3">语言质量</h4>
-                    <div className="text-2xl font-bold text-primary">
-                      {(conversionResult.quality_metrics.language_quality?.overall_score || 0).toFixed(1)}
-                    </div>
-                    <div className="space-y-1 text-xs text-muted-foreground mt-2">
-                      <div>流畅度: {(conversionResult.quality_metrics.language_quality?.fluency || 0).toFixed(1)}</div>
-                      <div>连贯性: {(conversionResult.quality_metrics.language_quality?.coherence || 0).toFixed(1)}</div>
-                      <div>语法正确性: {(conversionResult.quality_metrics.language_quality?.grammar || 0).toFixed(1)}</div>
+              {/* 下部：段落分析 */}
+              <div className="flex-1 flex gap-4 overflow-hidden min-h-0">
+                {/* 左侧：段落分析标题（竖排） */}
+                <div className="flex items-center justify-center w-12">
+                  <div className="flex flex-col items-center gap-1">
+                    <FileText className="h-5 w-5 text-black" />
+                    <div className="flex flex-col items-center text-lg font-semibold text-black">
+                      <span>段</span>
+                      <span>落</span>
+                      <span>分</span>
+                      <span>析</span>
                     </div>
                   </div>
                 </div>
-              )}
 
-              {/* 应用的规则 */}
-              {conversionResult.applied_rules && conversionResult.applied_rules.length > 0 && (
-                <div className="bg-card border rounded-lg p-4">
-                  <h4 className="font-medium mb-3">应用的转换规则</h4>
-                  <div className="space-y-2">
-                    {conversionResult.applied_rules.map((rule: any, index: number) => (
-                      <div key={index} className="flex items-center justify-between text-sm">
-                        <span>{rule.rule_name}</span>
-                        <span className="text-xs text-muted-foreground px-2 py-1 bg-muted rounded">
-                          {rule.rule_type}
-                        </span>
-                      </div>
-                    ))}
+                {/* 右侧：段落内容区域 */}
+                <div className="flex-1 flex flex-col space-y-3 overflow-hidden min-h-0">
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm text-black">
+                      第 {currentParagraphIndex + 1} 段 / 共 {paragraphs.length} 段
+                    </div>
                   </div>
+
+                  {paragraphs.length > 0 && (
+                    <>
+                      {/* 段落内容显示 - 使用dashboard页面的文字区域样式 */}
+                      <div className="flex-1 grid grid-cols-2 gap-4 overflow-hidden min-h-0">
+                        <Card className="flex flex-col">
+                          <CardHeader className="pb-1 pt-2">
+                            <CardTitle className="text-sm text-black">原始段落</CardTitle>
+                          </CardHeader>
+                          <CardContent className="flex-1 pb-2">
+                            <div className="relative border border-input bg-background rounded-lg focus-within:ring-1 focus-within:ring-ring h-full">
+                              <Textarea
+                                value={paragraphs[currentParagraphIndex]?.original || '无内容'}
+                                readOnly
+                                placeholder="无内容"
+                                className="h-full min-h-[calc(100%-2px)] resize-none border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 text-sm text-black"
+                              />
+                            </div>
+                          </CardContent>
+                        </Card>
+
+                        <Card className="flex flex-col">
+                          <CardHeader className="pb-1 pt-2">
+                            <CardTitle className="text-sm text-black">转换后段落</CardTitle>
+                          </CardHeader>
+                          <CardContent className="flex-1 pb-2">
+                            <div className="relative border border-input bg-background rounded-lg focus-within:ring-1 focus-within:ring-ring h-full">
+                              <Textarea
+                                value={paragraphs[currentParagraphIndex]?.converted || '无内容'}
+                                readOnly
+                                placeholder="无内容"
+                                className="h-full min-h-[calc(100%-2px)] resize-none border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 text-sm text-black"
+                              />
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </div>
+
+                      {/* 段落导航 - 使用21st-dev分页组件，增加底部内边距 */}
+                      <div className="pt-4 pb-6">
+                        <Pagination>
+                          <PaginationContent>
+                            <PaginationItem>
+                              <PaginationPrevious 
+                                href="#"
+                                onClick={(e) => {
+                                  e.preventDefault()
+                                  if (currentParagraphIndex > 0) {
+                                    setCurrentParagraphIndex(currentParagraphIndex - 1)
+                                  }
+                                }}
+                                className={cn(
+                                  "border-black text-black hover:bg-gray-100",
+                                  currentParagraphIndex === 0 && "opacity-50 cursor-not-allowed"
+                                )}
+                              />
+                            </PaginationItem>
+                            
+                            {/* 显示当前页和相邻页 - 修改为显示5个按钮 */}
+                            {(() => {
+                              const totalPages = paragraphs.length
+                              const current = currentParagraphIndex
+                              const pages = []
+                              
+                              if (totalPages <= 7) {
+                                // 如果总页数小于等于7，显示所有页码
+                                for (let i = 0; i < totalPages; i++) {
+                                  pages.push(
+                                    <PaginationItem key={i}>
+                                      <PaginationLink
+                                        href="#"
+                                        onClick={(e) => {
+                                          e.preventDefault()
+                                          setCurrentParagraphIndex(i)
+                                        }}
+                                        isActive={current === i}
+                                        className={cn(
+                                          "border-black text-black hover:bg-gray-100",
+                                          current === i && "bg-black text-white"
+                                        )}
+                                      >
+                                        {i + 1}
+                                      </PaginationLink>
+                                    </PaginationItem>
+                                  )
+                                }
+                              } else {
+                                // 总页数大于7时，使用省略号逻辑
+                                // 总是显示第一页
+                                pages.push(
+                                  <PaginationItem key={0}>
+                                    <PaginationLink
+                                      href="#"
+                                      onClick={(e) => {
+                                        e.preventDefault()
+                                        setCurrentParagraphIndex(0)
+                                      }}
+                                      isActive={current === 0}
+                                      className={cn(
+                                        "border-black text-black hover:bg-gray-100",
+                                        current === 0 && "bg-black text-white"
+                                      )}
+                                    >
+                                      1
+                                    </PaginationLink>
+                                  </PaginationItem>
+                                )
+                                
+                                // 如果当前页离第一页很远，显示省略号
+                                if (current > 3) {
+                                  pages.push(
+                                    <PaginationItem key="ellipsis1">
+                                      <PaginationEllipsis />
+                                    </PaginationItem>
+                                  )
+                                }
+                                
+                                // 显示当前页附近的页码（显示5个按钮）
+                                let start = Math.max(1, current - 2)
+                                let end = Math.min(totalPages - 2, current + 2)
+                                
+                                // 确保显示5个按钮
+                                if (end - start < 4) {
+                                  if (start === 1) {
+                                    end = Math.min(totalPages - 2, start + 4)
+                                  } else if (end === totalPages - 2) {
+                                    start = Math.max(1, end - 4)
+                                  }
+                                }
+                                
+                                for (let i = start; i <= end; i++) {
+                                  if (i !== 0 && i !== totalPages - 1) {
+                                    pages.push(
+                                      <PaginationItem key={i}>
+                                        <PaginationLink
+                                          href="#"
+                                          onClick={(e) => {
+                                            e.preventDefault()
+                                            setCurrentParagraphIndex(i)
+                                          }}
+                                          isActive={current === i}
+                                          className={cn(
+                                            "border-black text-black hover:bg-gray-100",
+                                            current === i && "bg-black text-white"
+                                          )}
+                                        >
+                                          {i + 1}
+                                        </PaginationLink>
+                                      </PaginationItem>
+                                    )
+                                  }
+                                }
+                                
+                                // 如果当前页离最后一页很远，显示省略号
+                                if (current < totalPages - 4) {
+                                  pages.push(
+                                    <PaginationItem key="ellipsis2">
+                                      <PaginationEllipsis />
+                                    </PaginationItem>
+                                  )
+                                }
+                                
+                                // 总是显示最后一页
+                                pages.push(
+                                  <PaginationItem key={totalPages - 1}>
+                                    <PaginationLink
+                                      href="#"
+                                      onClick={(e) => {
+                                        e.preventDefault()
+                                        setCurrentParagraphIndex(totalPages - 1)
+                                      }}
+                                      isActive={current === totalPages - 1}
+                                      className={cn(
+                                        "border-black text-black hover:bg-gray-100",
+                                        current === totalPages - 1 && "bg-black text-white"
+                                      )}
+                                    >
+                                      {totalPages}
+                                    </PaginationLink>
+                                  </PaginationItem>
+                                )
+                              }
+                              
+                              return pages
+                            })()}
+                            
+                            <PaginationItem>
+                              <PaginationNext 
+                                href="#"
+                                onClick={(e) => {
+                                  e.preventDefault()
+                                  if (currentParagraphIndex < paragraphs.length - 1) {
+                                    setCurrentParagraphIndex(currentParagraphIndex + 1)
+                                  }
+                                }}
+                                className={cn(
+                                  "border-black text-black hover:bg-gray-100",
+                                  currentParagraphIndex === paragraphs.length - 1 && "opacity-50 cursor-not-allowed"
+                                )}
+                              />
+                            </PaginationItem>
+                          </PaginationContent>
+                        </Pagination>
+                      </div>
+                    </>
+                  )}
+
+                  {paragraphs.length === 0 && (
+                    <div className="flex-1 flex items-center justify-center text-black">
+                      暂无段落数据
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
           )}
         </DialogContent>
