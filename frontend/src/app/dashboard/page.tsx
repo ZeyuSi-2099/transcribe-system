@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { useState, useRef, useEffect, useCallback, Suspense } from "react"
+import { useRuleSet } from "@/contexts/RuleSetContext"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -11,7 +12,7 @@ import { Progress } from "@/components/ui/progress"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination"
-import { ArrowUp, Square, Wand2, Upload, FileText, Eye, BarChart3, Settings, Sliders, Download, ChevronLeft, ChevronRight, TrendingUp, FileCheck, Target, MoreHorizontal } from "lucide-react"
+import { ArrowUp, Square, Wand2, Upload, FileText, Eye, BarChart3, Settings, Sliders, Download, ChevronLeft, ChevronRight, TrendingUp, FileCheck, Target, MoreHorizontal, Save } from "lucide-react"
 import { cn } from "@/lib/utils"
 import FileUploadZone from "@/components/FileUploadZone"
 import { useRouter, useSearchParams } from "next/navigation"
@@ -121,10 +122,10 @@ function useAutoResizeTextarea({
 
 function TranscriptionConverter({ className }: TranscriptionConverterProps) {
   const router = useRouter()
+  const { ruleSets, currentRuleSetId, setCurrentRuleSet, getCurrentRuleSet } = useRuleSet()
   const [inputText, setInputText] = useState('')
   const [conversionResult, setConversionResult] = useState<ConversionResult | null>(null)
   const [isConverting, setIsConverting] = useState(false)
-  const [selectedRuleSetId, setSelectedRuleSetId] = useState('default')
   const [activeTab, setActiveTab] = useState('text')
   const [uploadedFileInfo, setUploadedFileInfo] = useState<{name: string, type: string} | null>(null)
   const [showAnalysisModal, setShowAnalysisModal] = useState(false)
@@ -143,12 +144,7 @@ function TranscriptionConverter({ className }: TranscriptionConverterProps) {
     maxHeight: 300,
   })
 
-  // 更新规则集数据 - 只保留一个官方规则集
-  const [availableRuleSets] = useState<RuleSet[]>([
-    { id: 'default', name: '官方-通用规则集', description: '适用于大多数笔录转换场景', isDefault: true, enabledRulesCount: 8 }
-  ])
-
-  const selectedRuleSet = availableRuleSets.find(rs => rs.id === selectedRuleSetId)
+  const selectedRuleSet = getCurrentRuleSet()
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputText(e.target.value)
@@ -164,9 +160,9 @@ function TranscriptionConverter({ className }: TranscriptionConverterProps) {
     try {
       // 构建规则配置
       const ruleConfig = {
-        ruleSetId: selectedRuleSetId,
+        ruleSetId: currentRuleSetId,
         ruleSetName: selectedRuleSet?.name || '官方-通用规则集',
-        enabledRules: [] // 这里应该根据选中的规则集获取启用的规则
+        enabledRules: selectedRuleSet?.enabledRules || []
       }
 
       // 调用后端API进行转换，包含规则配置
@@ -284,6 +280,31 @@ function TranscriptionConverter({ className }: TranscriptionConverterProps) {
     link.click()
     document.body.removeChild(link)
     URL.revokeObjectURL(url)
+  }
+
+  const handleSaveTask = async () => {
+    if (!conversionResult || !conversionResult.id) return
+
+    try {
+      const response = await fetch(`/api/v1/transcription/${conversionResult.id}/save?is_saved=true`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error('保存任务失败')
+      }
+
+      const result = await response.json()
+      console.log('任务已保存:', result)
+      // 可以添加一些UI反馈，例如Toast提示
+      alert('任务已保存！')
+    } catch (error) {
+      console.error('保存任务出错:', error)
+      alert('保存任务失败，请重试！')
+    }
   }
 
   const handleTabChange = (value: string) => {
@@ -457,12 +478,12 @@ function TranscriptionConverter({ className }: TranscriptionConverterProps) {
                     <div className="flex items-center gap-3 flex-1">
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-medium text-white">规则集：</span>
-                        <Select value={selectedRuleSetId} onValueChange={setSelectedRuleSetId}>
+                        <Select value={currentRuleSetId} onValueChange={setCurrentRuleSet}>
                           <SelectTrigger className="w-52 bg-gray-800 border-gray-700 text-white text-xs">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent className="bg-gray-800 border-gray-700">
-                            {availableRuleSets.map(ruleSet => (
+                            {ruleSets.map(ruleSet => (
                               <SelectItem key={ruleSet.id} value={ruleSet.id} className="text-white hover:bg-gray-700 text-xs">
                                 <span>{ruleSet.name}</span>
                               </SelectItem>
@@ -575,6 +596,19 @@ function TranscriptionConverter({ className }: TranscriptionConverterProps) {
                     >
                       <Download className="h-3 w-3 mr-1" />
                       结果下载
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleSaveTask}
+                      disabled={!conversionResult}
+                      className={cn(
+                        "text-xs",
+                        !conversionResult && "text-muted-foreground cursor-not-allowed"
+                      )}
+                    >
+                      <Save className="h-3 w-3 mr-1" />
+                      保存任务
                     </Button>
                   </div>
 
