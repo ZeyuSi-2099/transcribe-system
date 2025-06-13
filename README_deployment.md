@@ -268,9 +268,9 @@ volumes:
 ### 环境变量配置 (.env)
 ```bash
 # Supabase 云服务配置
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_URL=https://ghbtjyetllhcdddhjygi.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdoYnRqeWV0bGxoY2RkZGhqeWdpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkxODk2OTMsImV4cCI6MjA2NDc2NTY5M30.9z608olZIwPpjNpcWJ_qgiJwAWHrctnLoSRE32mB47s
+SUPABASE_URL=https://ghbtjyetllhcdddhjygi.supabase.co
 SUPABASE_KEY=your-service-role-key
 SUPABASE_JWT_SECRET=your-jwt-secret
 
