@@ -29,10 +29,10 @@ class SupabaseClient:
     def _initialize_client(self):
         """初始化Supabase客户端"""
         url = os.getenv("SUPABASE_URL")
-        key = os.getenv("SUPABASE_SERVICE_KEY")  # 使用服务端密钥
+        key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")  # 修复：使用正确的环境变量名
         
         if not url or not key:
-            raise ValueError("SUPABASE_URL and SUPABASE_SERVICE_KEY must be set in environment variables")
+            raise ValueError("SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set in environment variables")
         
         self._client = create_client(url, key)
     

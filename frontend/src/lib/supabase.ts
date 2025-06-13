@@ -16,7 +16,8 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true
+    detectSessionInUrl: true,
+    flowType: 'pkce'
   }
 })
 
@@ -73,4 +74,27 @@ export interface BatchJob {
   started_at?: string
   completed_at?: string
   created_at: string
+}
+
+// 认证相关的类型定义
+export interface User {
+  id: string
+  email: string
+  user_metadata?: {
+    full_name?: string
+    avatar_url?: string
+  }
+}
+
+export interface Session {
+  access_token: string
+  refresh_token: string
+  user: User
+}
+
+// 认证状态枚举
+export enum AuthState {
+  LOADING = 'loading',
+  AUTHENTICATED = 'authenticated',
+  UNAUTHENTICATED = 'unauthenticated'
 } 

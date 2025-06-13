@@ -22,6 +22,8 @@ interface FileUploadZoneProps {
   onUploadSuccess?: (result: any) => void;
   onUploadError?: (error: string) => void;
   className?: string;
+  inputText?: string;
+  onInputChange?: (text: string) => void;
 }
 
 interface UploadState {
@@ -35,8 +37,7 @@ interface UploadState {
 
 const ACCEPTED_FILE_TYPES = {
   'text/plain': '.txt',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
-  'text/csv': '.csv'
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx'
 };
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -44,7 +45,9 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 export default function FileUploadZone({ 
   onUploadSuccess, 
   onUploadError, 
-  className 
+  className,
+  inputText = '',
+  onInputChange
 }: FileUploadZoneProps) {
   const [uploadState, setUploadState] = useState<UploadState>({
     file: null,
@@ -52,13 +55,13 @@ export default function FileUploadZone({
     progress: 0,
     success: false,
     error: null,
-    result: null
+    result: null,
   });
   const [title, setTitle] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
 
-  const resetUpload = useCallback(() => {
+  const resetUpload = () => {
     setUploadState({
       file: null,
       uploading: false,
@@ -71,15 +74,13 @@ export default function FileUploadZone({
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
-  }, []);
+  };
 
   const validateFile = useCallback((file: File): string | null => {
-    // 检查文件类型
     if (!Object.keys(ACCEPTED_FILE_TYPES).includes(file.type)) {
       return `不支持的文件类型。支持的格式：${Object.values(ACCEPTED_FILE_TYPES).join(', ')}`;
     }
 
-    // 检查文件大小
     if (file.size > MAX_FILE_SIZE) {
       return `文件大小超过限制（最大 ${Math.round(MAX_FILE_SIZE / 1024 / 1024)}MB）`;
     }
@@ -90,8 +91,10 @@ export default function FileUploadZone({
   const uploadFile = useCallback(async (file: File) => {
     const validationError = validateFile(file);
     if (validationError) {
-      setUploadState(prev => ({ ...prev, error: validationError }));
-      onUploadError?.(validationError);
+      setUploadState(prev => ({
+        ...prev,
+        error: validationError
+      }));
       return;
     }
 
@@ -101,49 +104,37 @@ export default function FileUploadZone({
       uploading: true,
       progress: 0,
       error: null,
-      success: false
+      success: false,
+      result: null,
     }));
 
     try {
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('title', title || `文件转换-${file.name}`);
+      formData.append('title', `文件转换-${file.name}`);
       formData.append('rule_config', '{}');
-
-      // 模拟上传进度
-      const progressInterval = setInterval(() => {
-        setUploadState(prev => {
-          const newProgress = Math.min(prev.progress + 10, 90);
-          return { ...prev, progress: newProgress };
-        });
-      }, 200);
 
       const response = await fetch('/api/v1/transcription/upload', {
         method: 'POST',
         body: formData,
       });
 
-      clearInterval(progressInterval);
-
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || '上传失败');
+        throw new Error('上传失败');
       }
 
       const result = await response.json();
-
+      
+      // 上传成功，设置成功状态
       setUploadState(prev => ({
         ...prev,
         uploading: false,
-        progress: 100,
         success: true,
         result
       }));
-
+      
+      // 通知父组件上传成功
       onUploadSuccess?.(result);
-
-      // 开始轮询转换状态
-      pollConversionStatus(result.id);
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '上传失败';
@@ -154,41 +145,11 @@ export default function FileUploadZone({
       }));
       onUploadError?.(errorMessage);
     }
-  }, [title, validateFile, onUploadSuccess, onUploadError]);
+  }, [validateFile, onUploadSuccess, onUploadError]);
 
-  const pollConversionStatus = useCallback(async (transcriptionId: number) => {
-    const checkStatus = async () => {
-      try {
-        const response = await fetch(`/api/v1/transcription/${transcriptionId}`);
-        if (response.ok) {
-          const data = await response.json();
-          
-          if (data.status === 'completed') {
-            setUploadState(prev => ({
-              ...prev,
-              result: { ...prev.result, ...data }
-            }));
-          } else if (data.status === 'failed') {
-            setUploadState(prev => ({
-              ...prev,
-              error: data.error_message || '转换失败'
-            }));
-          } else {
-            // 继续轮询
-            setTimeout(checkStatus, 2000);
-          }
-        }
-      } catch (error) {
-        console.error('轮询状态失败:', error);
-      }
-    };
-
-    checkStatus();
-  }, []);
-
-  const handleFileSelect = useCallback((file: File) => {
+  const handleFileSelect = (file: File) => {
     uploadFile(file);
-  }, [uploadFile]);
+  };
 
   const handleFileInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -235,32 +196,24 @@ export default function FileUploadZone({
   };
 
   return (
-    <Card className={cn("w-full", className)}>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Upload className="h-5 w-5" />
-          文件上传转换
-        </CardTitle>
-        <CardDescription>
-          支持上传 .txt、.docx、.csv 格式文件进行笔录转换
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* 标题输入 */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium">转换任务标题（可选）</label>
-          <Input
-            placeholder="输入转换任务的标题"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            disabled={uploadState.uploading}
-          />
+    <div className={cn("w-full h-full flex flex-col", className)}>
+      {uploadState.success ? (
+        // 上传成功后显示文本编辑界面
+        <div className="h-full flex flex-col">
+          <div className="relative border border-input bg-background rounded-lg focus-within:ring-1 focus-within:ring-ring h-full">
+            <textarea
+              value={inputText}
+              onChange={(e) => onInputChange?.(e.target.value)}
+              placeholder="请在此处粘贴或输入原始笔录内容..."
+              className="h-full w-full min-h-[calc(100%-2px)] resize-none border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 text-sm p-3"
+            />
+          </div>
         </div>
-
-        {/* 文件上传区域 */}
+      ) : (
+        // 文件上传区域 - 占满整个容器
         <div
           className={cn(
-            "border-2 border-dashed rounded-lg p-8 text-center transition-colors",
+            "border-2 border-dashed rounded-lg p-6 text-center transition-colors h-full flex flex-col justify-center",
             isDragging ? "border-primary bg-primary/5" : "border-muted-foreground/25",
             uploadState.error ? "border-destructive bg-destructive/5" : "",
             "hover:border-primary/50 hover:bg-muted/50"
@@ -286,18 +239,9 @@ export default function FileUploadZone({
                 <div className="space-y-2">
                   <div className="flex items-center justify-center gap-2">
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    <span className="text-sm">
-                      {uploadState.progress < 100 ? '上传中...' : '处理中...'}
-                    </span>
+                    <span className="text-sm">上传中...</span>
                   </div>
                   <Progress value={uploadState.progress} className="w-full" />
-                </div>
-              )}
-
-              {uploadState.success && !uploadState.uploading && (
-                <div className="flex items-center justify-center gap-2 text-green-600">
-                  <CheckCircle className="h-5 w-5" />
-                  <span>上传成功，正在转换中...</span>
                 </div>
               )}
 
@@ -312,6 +256,16 @@ export default function FileUploadZone({
                   重新选择
                 </Button>
               </div>
+
+              {/* 错误提示 - 内嵌在上传区域内 */}
+              {uploadState.error && (
+                <div className="mt-4 p-3 bg-destructive/10 border border-destructive/20 rounded-md">
+                  <div className="flex items-center gap-2 text-destructive text-sm">
+                    <AlertCircle className="h-4 w-4" />
+                    <span>{uploadState.error}</span>
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             // 文件选择状态
@@ -331,39 +285,31 @@ export default function FileUploadZone({
                 选择文件
               </Button>
               <p className="text-xs text-muted-foreground">
-                支持 .txt、.docx、.csv 格式，最大 {Math.round(MAX_FILE_SIZE / 1024 / 1024)}MB
+                支持 .txt、.docx 格式，最大 {Math.round(MAX_FILE_SIZE / 1024 / 1024)}MB
               </p>
+
+              {/* 错误提示 - 内嵌在上传区域内 */}
+              {uploadState.error && (
+                <div className="mt-4 p-3 bg-destructive/10 border border-destructive/20 rounded-md">
+                  <div className="flex items-center gap-2 text-destructive text-sm">
+                    <AlertCircle className="h-4 w-4" />
+                    <span>{uploadState.error}</span>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
+      )}
 
-        {/* 错误提示 */}
-        {uploadState.error && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{uploadState.error}</AlertDescription>
-          </Alert>
-        )}
-
-        {/* 转换结果预览 */}
-        {uploadState.result && uploadState.result.status === 'completed' && (
-          <Alert>
-            <CheckCircle className="h-4 w-4" />
-            <AlertDescription>
-              转换完成！任务ID: {uploadState.result.id}
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {/* 隐藏的文件输入 */}
-        <input
-          type="file"
-          ref={fileInputRef}
-          className="hidden"
-          accept={Object.values(ACCEPTED_FILE_TYPES).join(',')}
-          onChange={handleFileInputChange}
-        />
-      </CardContent>
-    </Card>
+      {/* 隐藏的文件输入 */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        className="hidden"
+        accept={Object.values(ACCEPTED_FILE_TYPES).join(',')}
+        onChange={handleFileInputChange}
+      />
+    </div>
   );
 } 

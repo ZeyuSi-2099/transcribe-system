@@ -1,20 +1,17 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { RuleSetProvider } from "@/contexts/RuleSetContext";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({ 
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  variable: "--font-inter",
 });
 
 export const metadata: Metadata = {
   title: "笔录转换工具",
-  description: "基于LLM和规则引擎的智能笔录转换系统",
+  description: "基于大语言模型与确定性规则的混合处理架构，将访谈对话记录转换为高质量的第一人称叙述文档",
 };
 
 export default function RootLayout({
@@ -25,11 +22,15 @@ export default function RootLayout({
   return (
     <html lang="zh-CN">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${inter.variable} font-sans antialiased`}
       >
-        <main>
-          {children}
-        </main>
+        <AuthProvider>
+          <RuleSetProvider>
+            <main>
+              {children}
+            </main>
+          </RuleSetProvider>
+        </AuthProvider>
       </body>
     </html>
   );

@@ -24,6 +24,8 @@ class Settings(BaseSettings):
     ALLOWED_HOSTS: List[str] = [
         "http://localhost:3000",  # Next.js 开发服务器
         "http://127.0.0.1:3000",
+        "http://localhost:3001",  # Next.js 开发服务器 (备用端口)
+        "http://127.0.0.1:3001",
         "http://localhost:8000",  # FastAPI 开发服务器
         "http://127.0.0.1:8000",
         "https://transcribe.solutions",  # 生产环境域名
@@ -71,10 +73,20 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "INFO"
     LOG_FILE: str = "./logs/app.log"
     
+    # Supabase 配置 (用于前端认证)
+    SUPABASE_URL: Optional[str] = Field(default=None, description="Supabase项目URL")
+    SUPABASE_ANON_KEY: Optional[str] = Field(default=None, description="Supabase匿名密钥")
+    SUPABASE_SERVICE_ROLE_KEY: Optional[str] = Field(default=None, description="Supabase服务角色密钥")
+    
+    # 环境配置
+    ENVIRONMENT: str = "development"
+    ALLOWED_ORIGINS: Optional[str] = Field(default=None, description="允许的CORS源")
+    
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
-        case_sensitive=True
+        case_sensitive=True,
+        extra="ignore"  # 忽略额外的环境变量
     )
 
 

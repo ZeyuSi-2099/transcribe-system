@@ -1,555 +1,271 @@
 "use client"
 
 import * as React from "react"
-import { useState, useRef, useEffect, useCallback, Suspense } from "react"
-import { Textarea } from "@/components/ui/textarea"
+import { useState } from "react"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ArrowUp, Square, Wand2, Upload, FileText, Eye, BarChart3, Settings } from "lucide-react"
-import { cn } from "@/lib/utils"
-import FileUploadZone from "@/components/FileUploadZone"
-import { useRouter, useSearchParams } from "next/navigation"
-import Sidebar from '@/components/Sidebar'
+import { 
+  ArrowRight, 
+  Zap, 
+  Shield, 
+  BarChart3, 
+  FileText, 
+  Settings, 
+  Upload,
+  Download,
+  CheckCircle,
+  Github,
+  ExternalLink
+} from "lucide-react"
 
-interface TranscriptionConverterProps {
-  className?: string
-}
-
-interface UseAutoResizeTextareaProps {
-  minHeight: number
-  maxHeight?: number
-}
-
-interface ConversionResult {
-  id: number
-  original_text: string
-  converted_text: string
-  quality_metrics?: any
-  processing_stages?: any
-  status: string
-  processing_time?: number
-}
-
-interface RuleConfig {
-  ruleSetId: string
-  ruleSetName: string
-  enabledRules: Array<{
-    categoryId: string
-    primaryRuleId: string
-    secondaryRuleId?: string
-  }>
-}
-
-interface RuleSet {
-  id: string
-  name: string
+interface FeatureCardProps {
+  icon: React.ReactNode
+  title: string
   description: string
-  isDefault: boolean
-  enabledRulesCount: number
+  badge?: string
 }
 
-function useAutoResizeTextarea({
-  minHeight,
-  maxHeight,
-}: UseAutoResizeTextareaProps) {
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
-
-  const adjustHeight = useCallback(
-    (reset?: boolean) => {
-      const textarea = textareaRef.current
-      if (!textarea) return
-
-      if (reset) {
-        textarea.style.height = `${minHeight}px`
-        return
-      }
-
-      // Temporarily shrink to get the right scrollHeight
-      textarea.style.height = `${minHeight}px`
-
-      // Calculate new height
-      const newHeight = Math.max(
-        minHeight,
-        Math.min(
-          textarea.scrollHeight,
-          maxHeight ?? Number.POSITIVE_INFINITY
-        )
-      )
-
-      textarea.style.height = `${newHeight}px`
-    },
-    [minHeight, maxHeight]
+function FeatureCard({ icon, title, description, badge }: FeatureCardProps) {
+  return (
+    <Card className="relative overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              {icon}
+            </div>
+            <CardTitle className="text-lg">{title}</CardTitle>
+          </div>
+          {badge && (
+            <Badge variant="secondary" className="text-xs">
+              {badge}
+            </Badge>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent>
+        <CardDescription className="text-sm leading-relaxed">
+          {description}
+        </CardDescription>
+      </CardContent>
+    </Card>
   )
-
-  useEffect(() => {
-    // Set initial height
-    const textarea = textareaRef.current
-    if (textarea) {
-      textarea.style.height = `${minHeight}px`
-    }
-  }, [minHeight])
-
-  // Adjust height on window resize
-  useEffect(() => {
-    const handleResize = () => adjustHeight()
-    window.addEventListener("resize", handleResize)
-    return () => window.removeEventListener("resize", handleResize)
-  }, [adjustHeight])
-
-  return { textareaRef, adjustHeight }
 }
 
-function TranscriptionConverter({ className }: TranscriptionConverterProps) {
-  const [inputText, setInputText] = useState("")
-  const [isConverting, setIsConverting] = useState(false)
-  const [conversionResult, setConversionResult] = useState<ConversionResult | null>(null)
-  const [selectedRuleSetId, setSelectedRuleSetId] = useState<string>('default')
-  
-  const searchParams = useSearchParams()
-  const router = useRouter()
-  
-  const { textareaRef: inputRef, adjustHeight: adjustInputHeight } = useAutoResizeTextarea({
-    minHeight: 120,
-    maxHeight: 300,
-  })
-  
-  const { textareaRef: outputRef, adjustHeight: adjustOutputHeight } = useAutoResizeTextarea({
-    minHeight: 120,
-    maxHeight: 300,
-  })
+interface StepCardProps {
+  step: number
+  title: string
+  description: string
+  icon: React.ReactNode
+}
 
-  // 模拟规则集数据
-  const [availableRuleSets] = useState<RuleSet[]>([
-    { id: 'default', name: '通用规则集', description: '适用于大多数笔录转换场景', isDefault: true, enabledRulesCount: 8 },
-    { id: 'meeting', name: '会议专用规则', description: '针对会议记录优化的规则集', isDefault: false, enabledRulesCount: 6 },
-    { id: 'interview', name: '访谈优化规则', description: '专门用于访谈笔录的规则集', isDefault: false, enabledRulesCount: 7 },
-  ])
+function StepCard({ step, title, description, icon }: StepCardProps) {
+  return (
+    <div className="relative">
+      <div className="flex items-center space-x-4">
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground font-semibold">
+          {step}
+        </div>
+        <div className="flex-1">
+          <h3 className="font-semibold text-lg mb-1">{title}</h3>
+          <p className="text-muted-foreground text-sm leading-relaxed">
+            {description}
+          </p>
+        </div>
+        <div className="hidden md:block text-muted-foreground">
+          {icon}
+        </div>
+      </div>
+    </div>
+  )
+}
 
-  const selectedRuleSet = availableRuleSets.find(rs => rs.id === selectedRuleSetId)
+export default function LandingPage() {
+  const [isLoading, setIsLoading] = useState(false)
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInputText(e.target.value)
-    adjustInputHeight()
-  }
-
-  const handleConvert = async () => {
-    if (!inputText.trim()) return
-    
-    setIsConverting(true)
-    setConversionResult(null)
-    
-    try {
-      // 构建规则配置
-      const ruleConfig = {
-        ruleSetId: selectedRuleSetId,
-        ruleSetName: selectedRuleSet?.name || '通用规则集',
-        enabledRules: [] // 这里应该根据选中的规则集获取启用的规则
-      }
-
-      // 调用后端API进行转换，包含规则配置
-      const response = await fetch('/api/v1/transcription/convert', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          title: '文本转换',
-          original_text: inputText,
-          file_name: null,
-          file_type: 'text',
-          rule_config: ruleConfig
-        }),
-      })
-      
-      if (!response.ok) {
-        throw new Error('转换失败')
-      }
-      
-      const result = await response.json()
-      
-      // 轮询检查转换状态
-      const checkStatus = async (id: number) => {
-        const statusResponse = await fetch(`/api/v1/transcription/${id}`)
-        const statusData = await statusResponse.json()
-        
-        if (statusData.status === 'completed') {
-          setConversionResult(statusData)
-          setIsConverting(false)
-          adjustOutputHeight()
-        } else if (statusData.status === 'failed') {
-          setConversionResult({
-            id: statusData.id,
-            original_text: inputText,
-            converted_text: '转换失败：' + (statusData.error_message || '未知错误'),
-            status: 'failed'
-          })
-          setIsConverting(false)
-          adjustOutputHeight()
-        } else {
-          // 继续轮询
-          setTimeout(() => checkStatus(id), 1000)
-        }
-      }
-      
-      // 开始轮询
-      checkStatus(result.id)
-      
-    } catch (error) {
-      console.error('转换错误:', error)
-      setConversionResult({
-        id: 0,
-        original_text: inputText,
-        converted_text: '转换失败，请检查网络连接或稍后重试',
-        status: 'failed'
-      })
-      setIsConverting(false)
-      adjustOutputHeight()
+  const features = [
+    {
+      icon: <Zap className="h-5 w-5" />,
+      title: "智能转换引擎",
+      description: "结合确定性规则与大语言模型，确保转换的准确性和流畅性。支持多种LLM后端。",
+      badge: "核心功能"
+    },
+    {
+      icon: <Settings className="h-5 w-5" />,
+      title: "灵活规则配置",
+      description: "三级规则结构设计，支持通用规则集和个性化定制规则，满足不同场景需求。",
+    },
+    {
+      icon: <BarChart3 className="h-5 w-5" />,
+      title: "质量检验体系",
+      description: "完整的定量和定性指标评估，包含字数保留率、语义连贯性等多维度分析。",
+    },
+    {
+      icon: <FileText className="h-5 w-5" />,
+      title: "多格式支持",
+      description: "支持文本直接输入、.txt和.docx文件上传，以及多格式结果导出。",
+    },
+    {
+      icon: <Shield className="h-5 w-5" />,
+      title: "数据安全保护",
+      description: "完整的用户认证体系，数据加密存储，确保笔录内容的隐私安全。",
+    },
+    {
+      icon: <Upload className="h-5 w-5" />,
+      title: "批量处理能力",
+      description: "支持多文件同时处理，提高工作效率，适合大规模笔录转换需求。",
+      badge: "规划中"
     }
-  }
+  ]
 
-  const handleClearInput = () => {
-    setInputText("")
-    adjustInputHeight(true)
-  }
-
-  const handleClearResult = () => {
-    setConversionResult(null)
-    adjustOutputHeight(true)
-  }
-
-  const handleFileUploadSuccess = (result: any) => {
-    // 文件上传成功后，轮询检查转换状态
-    const checkStatus = async (id: number) => {
-      const statusResponse = await fetch(`/api/v1/transcription/${id}`)
-      const statusData = await statusResponse.json()
-      
-      if (statusData.status === 'completed') {
-        setConversionResult(statusData)
-        adjustOutputHeight()
-      } else if (statusData.status === 'failed') {
-        setConversionResult({
-          id: statusData.id,
-          original_text: statusData.original_text || '',
-          converted_text: '转换失败：' + (statusData.error_message || '未知错误'),
-          status: 'failed'
-        })
-      } else {
-        setTimeout(() => checkStatus(id), 2000)
-      }
+  const steps = [
+    {
+      step: 1,
+      title: "上传笔录",
+      description: "支持文本直接输入或文件上传(.txt, .docx)，自动识别格式并预览内容。",
+      icon: <Upload className="h-5 w-5" />
+    },
+    {
+      step: 2,
+      title: "配置规则",
+      description: "选择通用规则集或定制专属规则，实时预览转换效果，确保符合需求。",
+      icon: <Settings className="h-5 w-5" />
+    },
+    {
+      step: 3,
+      title: "智能转换",
+      description: "混合处理引擎自动执行转换，实时显示进度，确保高质量输出结果。",
+      icon: <Zap className="h-5 w-5" />
+    },
+    {
+      step: 4,
+      title: "查看结果",
+      description: "对比原文和转换结果，查看详细的质量指标，支持多格式下载。",
+      icon: <Download className="h-5 w-5" />
     }
-    
-    checkStatus(result.id)
-  }
+  ]
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      {/* 侧边栏 */}
-      <Sidebar />
-      
-      {/* 主内容区域 */}
-      <div className="flex-1 overflow-hidden ml-14">
-        <div className={cn("h-full p-6 overflow-y-auto", className)}>
-          <div className="w-full max-w-6xl mx-auto">
-      <div className="flex flex-col space-y-6">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold text-foreground">笔录转换工具</h1>
-          <p className="text-muted-foreground">支持文本输入和文件上传两种方式，自动转换对话式笔录为叙述式笔录</p>
-        </div>
-
-              {/* 规则选择区域 */}
-              <Card className="border-blue-200 bg-blue-50">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Settings className="h-5 w-5" />
-                    规则配置
-                  </CardTitle>
-                  <CardDescription>
-                    选择适合的规则集来优化转换效果
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium">规则集：</span>
-                        <Select value={selectedRuleSetId} onValueChange={setSelectedRuleSetId}>
-                          <SelectTrigger className="w-64">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {availableRuleSets.map(ruleSet => (
-                              <SelectItem key={ruleSet.id} value={ruleSet.id}>
-                                <div className="flex items-center gap-2">
-                                  <span>{ruleSet.name}</span>
-                                  {ruleSet.isDefault && (
-                                    <Badge variant="secondary" className="text-xs">默认</Badge>
-                                  )}
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      {selectedRuleSet && (
-                        <div className="text-sm text-gray-600">
-                          <span>{selectedRuleSet.description}</span>
-                          <span className="ml-2">• 已启用 {selectedRuleSet.enabledRulesCount} 个规则</span>
-                        </div>
-                      )}
-                    </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => router.push(`/rules?set=${selectedRuleSetId}`)}
-                      className="gap-2"
-                    >
-                      <Settings className="h-4 w-4" />
-                      配置规则
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-
-        <Tabs defaultValue="text" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="text" className="flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              文本输入
-            </TabsTrigger>
-            <TabsTrigger value="upload" className="flex items-center gap-2">
-              <Upload className="h-4 w-4" />
-              文件上传
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="text" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-medium">原始笔录</h3>
-                  {inputText && (
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={handleClearInput}
-                    >
-                      清空
-                    </Button>
-                  )}
-                </div>
-                <div className="relative border border-input bg-background rounded-lg focus-within:ring-1 focus-within:ring-ring">
-                  <Textarea
-                    ref={inputRef}
-                    value={inputText}
-                    onChange={handleInputChange}
-                    placeholder="请在此处粘贴或输入原始笔录内容..."
-                          className="min-h-[300px] resize-none border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-medium">转换结果</h3>
-                  {conversionResult && (
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={handleClearResult}
-                    >
-                      清空
-                    </Button>
-                  )}
-                </div>
-                <div className="relative border border-input bg-background rounded-lg">
-                  <Textarea
-                    ref={outputRef}
-                    value={conversionResult?.converted_text || ''}
-                    readOnly
-                    placeholder="转换后的内容将显示在这里..."
-                          className="min-h-[300px] resize-none border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
-                  />
-                </div>
-              </div>
-            </div>
-
-                  <div className="flex justify-center gap-4">
-              <Button
-                onClick={handleConvert}
-                disabled={!inputText.trim() || isConverting}
-                      className="gap-2"
-              >
-                {isConverting ? (
-                  <>
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          转换中...
-                  </>
-                ) : (
-                  <>
-                    <Wand2 className="size-4" />
-                    开始转换
-                  </>
-                )}
-              </Button>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="upload" className="space-y-6">
-            <FileUploadZone 
-              onUploadSuccess={handleFileUploadSuccess}
-              onUploadError={(error) => console.error('Upload error:', error)}
-            />
-          </TabsContent>
-        </Tabs>
-
-        {/* 转换结果详情 */}
-        {conversionResult && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Eye className="h-5 w-5" />
-                转换结果详情
-              </CardTitle>
-              <CardDescription>
-                查看详细的转换信息和质量评估
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="space-y-1">
-                  <p className="text-sm font-medium">任务ID</p>
-                  <p className="text-2xl font-bold">{conversionResult.id}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm font-medium">状态</p>
-                  <Badge variant={conversionResult.status === 'completed' ? 'default' : 'destructive'}>
-                    {conversionResult.status === 'completed' ? '已完成' : '失败'}
-                  </Badge>
-                </div>
-                {conversionResult.processing_time && (
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium">处理时间</p>
-                    <p className="text-2xl font-bold">{conversionResult.processing_time.toFixed(2)}s</p>
-                  </div>
-                )}
-                {conversionResult.quality_metrics?.overall_score && (
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium">质量评分</p>
-                    <div className="flex items-center gap-2">
-                      <Progress value={conversionResult.quality_metrics.overall_score} className="flex-1" />
-                      <span className="text-sm font-medium">
-                        {Math.round(conversionResult.quality_metrics.overall_score)}%
-                      </span>
-                    </div>
-                  </div>
-                )}
-              </div>
-              
-              {/* 质量指标详情 */}
-              {conversionResult.quality_metrics && (
-                <div className="space-y-3">
-                  <h4 className="text-sm font-medium flex items-center gap-2">
-                    <BarChart3 className="h-4 w-4" />
-                    质量指标
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                    {Object.entries(conversionResult.quality_metrics).map(([key, value]) => {
-                      if (key === 'overall_score') return null
-                            
-                            // 处理嵌套对象
-                            const formatValue = (val: any): string => {
-                              if (typeof val === 'number') {
-                                return `${val.toFixed(2)}${key.includes('score') || key.includes('rate') ? '%' : ''}`
-                              } else if (typeof val === 'object' && val !== null) {
-                                // 如果是对象，显示其主要属性
-                                if (val.score !== undefined) return `${val.score.toFixed(2)}%`
-                                if (val.rate !== undefined) return `${(val.rate * 100).toFixed(2)}%`
-                                if (val.count !== undefined) return `${val.count}`
-                                // 对于复杂对象，显示关键信息
-                                const entries = Object.entries(val)
-                                if (entries.length > 0) {
-                                  const [firstKey, firstValue] = entries[0]
-                                  if (typeof firstValue === 'number') {
-                                    return `${firstValue.toFixed(2)}`
-                                  }
-                                }
-                                return '已计算'
-                              } else {
-                                return String(val)
-                              }
-                            }
-                            
-                            // 格式化键名显示
-                            const formatKey = (k: string): string => {
-                              const keyMap: { [key: string]: string } = {
-                                'character_count': '字符统计',
-                                'word_count': '词汇统计', 
-                                'compression_ratio': '压缩比例',
-                                'content_preservation': '内容保留',
-                                'language_quality': '语言质量',
-                                'structure_metrics': '结构指标',
-                                'rule_application': '规则应用',
-                                'conversion_summary': '转换摘要',
-                                'processing_stages': '处理阶段'
-                              }
-                              return keyMap[k] || k.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
-                            }
-                            
-                      return (
-                        <div key={key} className="flex justify-between">
-                                <span className="text-muted-foreground">{formatKey(key)}:</span>
-                          <span className="font-medium">
-                                  {formatValue(value)}
-                          </span>
-                        </div>
-                      )
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {conversionResult.status === 'completed' && (
-                <div className="flex justify-center pt-4">
-                  <Button
-                    onClick={() => window.open(`/results/${conversionResult.id}`, '_blank')}
-                    className="w-full max-w-xs gap-2"
-                  >
-                    <Eye className="size-4" />
-                    查看详细结果和对比
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
+      {/* Hero Section */}
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.6))] dark:bg-grid-slate-700/25 dark:[mask-image:linear-gradient(0deg,rgba(255,255,255,0.1),rgba(255,255,255,0.5))]" />
+        <div className="relative">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24">
+            <div className="text-center">
+              <h1 className="text-4xl sm:text-6xl font-bold text-slate-900 dark:text-white mb-6">
+                智能笔录
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
+                  转换系统
+                </span>
+              </h1>
+              <p className="text-xl text-slate-600 dark:text-slate-300 mb-8 max-w-3xl mx-auto leading-relaxed">
+                基于大语言模型与确定性规则的混合处理架构，将访谈对话记录转换为高质量的第一人称叙述文档。
+                支持自定义规则配置，提供完整的质量检验体系。
+              </p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <Link href="/dashboard">
+                  <Button size="lg" className="w-full sm:w-auto" disabled={isLoading}>
+                    开始使用
+                    <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
+                </Link>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </div>
-  )
-}
+      </section>
 
-// 创建一个包装的加载组件
-function PageLoading() {
-  return (
-    <div className="flex h-screen items-center justify-center">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
-        <p className="text-gray-600">加载中...</p>
-      </div>
-    </div>
-  )
-}
+      {/* Features Section */}
+      <section className="py-24 bg-white dark:bg-slate-900">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">
+              强大功能特性
+            </h2>
+            <p className="text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
+              集成先进的AI技术与灵活的规则引擎，为您提供专业级的笔录转换解决方案
+            </p>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {features.map((feature, index) => (
+              <FeatureCard key={index} {...feature} />
+            ))}
+          </div>
+        </div>
+      </section>
 
-export default function TranscriptionConverterDemo() {
-  return (
-    <Suspense fallback={<PageLoading />}>
-      <TranscriptionConverter />
-    </Suspense>
+      {/* How it Works Section */}
+      <section className="py-24 bg-slate-50 dark:bg-slate-800/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">
+              使用流程
+            </h2>
+            <p className="text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
+              简单四步，完成从原始笔录到高质量第一人称叙述的智能转换
+            </p>
+          </div>
+          <div className="space-y-8">
+            {steps.map((step, index) => (
+              <StepCard key={index} {...step} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Stats Section */}
+      <section className="py-24 bg-white dark:bg-slate-900">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid md:grid-cols-3 gap-8 text-center">
+            <div>
+              <div className="text-4xl font-bold text-primary mb-2">95%+</div>
+              <div className="text-slate-600 dark:text-slate-300">转换准确率</div>
+            </div>
+            <div>
+              <div className="text-4xl font-bold text-primary mb-2">3s</div>
+              <div className="text-slate-600 dark:text-slate-300">平均处理时间</div>
+            </div>
+            <div>
+              <div className="text-4xl font-bold text-primary mb-2">10+</div>
+              <div className="text-slate-600 dark:text-slate-300">支持文件格式</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-24 bg-gradient-to-r from-blue-600 to-purple-600">
+        <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-bold text-white mb-4">
+            立即开始您的笔录转换之旅
+          </h2>
+          <p className="text-xl text-blue-100 mb-8">
+            体验AI驱动的智能转换，提升您的工作效率
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link href="/auth/login">
+              <Button size="lg" variant="secondary" className="w-full sm:w-auto">
+                开始使用
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="py-12 bg-slate-900 text-slate-300">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <p className="text-sm">
+              © 2025 智能笔录转换系统
+            </p>
+          </div>
+        </div>
+      </footer>
+    </div>
   )
 }
